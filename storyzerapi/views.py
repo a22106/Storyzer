@@ -9,16 +9,32 @@ from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
 from django.utils.encoding import force_bytes, smart_str
+from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
+from manage import api_host
 
 from .models import CustomUser as User
 from .serializers import UserSerializer
 
 class UserViewSet(viewsets.ModelViewSet):
-    
     queryset = User.objects.all()
     serializer_class = UserSerializer
     
     # Create a new user
+    @swagger_auto_schema(operation_description="Create a new user",
+                         request_body=openapi.Schema(
+                             type=openapi.TYPE_OBJECT,
+                             properties={
+                                 'username': openapi.Schema(type=openapi.TYPE_STRING, description='Username'),
+                                 'email': openapi.Schema(type=openapi.TYPE_STRING, description='Email'),
+                                 'password': openapi.Schema(type=openapi.TYPE_STRING, description='Password'),
+                             },
+                         ),
+                         responses={
+                             201: 'User created successfully',
+                             400: 'Invalid request',
+                         },
+                    )
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
@@ -27,10 +43,15 @@ class UserViewSet(viewsets.ModelViewSet):
                 email=serializer.validated_data['email'],  # Make sure to save email
                 password=serializer.validated_data['password'],
             )
-            # Do something with the user object if needed, like sending a welcome email
 
+            # Send email
+            token = default_token_generator.make_token(user)
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            verification_link = f'http://{api_host}/email/verify/{token}/{uid}/'
+            send_mail('Email Verification', f'Verification link: {verification_link}', settings.EMAIL_HOST_USER, [user.email]) 
+            
             return Response(
-                {"message": "User created successfully"},
+                {"message": "User created successfully. Please check your email to verify your account."},
                 status=status.HTTP_201_CREATED
             )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -43,11 +64,11 @@ class EmailVerifyView(APIView):
             user = User.objects.get(email=email)
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
-            verification_link = f'http://localhost:8000/email/verify/{token}/{uid}/'
+            verification_link = f'http://{api_host}/email/verify/{token}/{uid}/'
             
-            print(f"User found: {user}")
             # Send email
-            send_mail('Email Verification', f'Verification link: {verification_link}', settings.EMAIL_HOST_USER, [email]) 
+            send_mail('Email Verification', VERIFICATION_EMAIL_TEMPLATE.format(verification_link)
+                      , settings.EMAIL_HOST_USER, [user.email])
             return Response({"message": "Verification email sent."}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({"error": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
@@ -99,6 +120,20 @@ class PasswordResetConfirmView(APIView):
             return Response({"error": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
 class UserRoleView(APIView):
+    @swagger_auto_schema(
+        operation_descript="Update user role",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT,
+            properties={
+                'role': openapi.Schema(type=openapi.TYPE_STRING, description='New role for the user'),
+            },
+        ),
+        responses={
+            200: 'Role updated successfully',
+            400: 'User does not exist',
+        },
+    )
+        
     def put(self, request, id):
         try:
             user = User.objects.get(pk=id)

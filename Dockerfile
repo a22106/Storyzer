@@ -5,16 +5,21 @@ RUN apt-get update \
     && apt-get install -y pkg-config default-libmysqlclient-dev gcc \
     && apt-get clean
 
-# Allow statements and log messages to immediately appear in the Knative logs
+# Set environment variables
 ENV PYTHONUNBUFFERED True
-
-# Copy local code to the container image.
 ENV APP_HOME /app
-WORKDIR $APP_HOME
-COPY . ./
-COPY config.ini ./config.ini
 
+# Working directory
+WORKDIR $APP_HOME
+
+# Install python dependencies.
+COPY requirements.txt .
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy the application
+COPY . ./
+
+RUN python manage.py collectstatic --noinput
 
 CMD ["python", "manage.py", "runserver", "0.0.0.0:8080"]

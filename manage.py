@@ -4,6 +4,9 @@ import os
 import sys
 import requests
 
+host = "localhost"
+port = 8000
+
 def get_public_ip():
     try:
         return requests.get('https://api.ipify.org').text
@@ -14,6 +17,16 @@ def get_public_ip():
     except Exception as e:
         print(e)
         return False
+    
+for arg in sys.argv:
+    if arg.startswith("--noreload"):
+        continue
+    if ":" in arg:
+        host, port = arg.split(":")
+        break
+    
+public_ip = get_public_ip()
+api_host = f"{public_ip}:{port}" if public_ip else f"localhost:{port}"
 
 def main():
     """Run administrative tasks."""
@@ -31,17 +44,7 @@ def main():
 
 
 if __name__ == '__main__':
-    port = 8000
-    
-    for arg in sys.argv:
-        if arg.startswith("--noreload"):
-            continue
-        if ":" in arg:
-            _, port = arg.split(":")
-            break
-        
-    public_ip = get_public_ip()
     if public_ip:
-        print(f"Public address: http://{public_ip}:{port}")
+        print(f"API Swagger: http://{api_host}/swagger/")
     
     main()

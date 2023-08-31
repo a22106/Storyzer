@@ -14,3 +14,4 @@ PyJWT
 requests
 oauthlib
 requests-oauthlib
+gunicorn==20.1.0
