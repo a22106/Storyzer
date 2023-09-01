@@ -1,5 +1,5 @@
 # Storyzer
 ## run django
 ```
-python manage.py runserver
+python manage.py runserver (0.0.0.0:7000)
 ```
