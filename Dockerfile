@@ -17,7 +17,6 @@ COPY requirements.txt .
 RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the application
 COPY . ./
 
 RUN python manage.py collectstatic --noinput
