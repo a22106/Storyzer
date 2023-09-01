@@ -14,7 +14,7 @@ from drf_yasg import openapi
 from manage import api_host
 import openai
 
-from .models import CustomUser as User
+from .models import User as User
 from .serializers import UserSerializer
 
 class UserViewSet(viewsets.ModelViewSet):

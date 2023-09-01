@@ -45,7 +45,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework_simplejwt',
     'drf_yasg',
-    'storyzerapi'
+    # 'storyzerapi',
+    'storyzerapi.apps.StoryzerapiConfig'
 ]
 
 REST_FRAMEWORK = {
@@ -94,7 +95,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'storyzer.wsgi.application'
+WSGI_APPLICATION = 'storyzerapi.wsgi.application'
 
 
 # Vertex AI
@@ -147,7 +148,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-AUTH_USER_MODEL = 'storyzerapi.CustomUser'
+AUTH_USER_MODEL = 'storyzerapi.User'
 
 
 # Internationalization

@@ -4,7 +4,7 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    # path('admin/', admin.site.urls),
     path('users/', views.UserViewSet.as_view({'post': 'create'}), name='user-create'),
     path('email/verify/', views.EmailVerifyView.as_view(), name='email-verify'),
     path('email/verify/<str:token>/<str:uid>/', views.EmailVerifyTokenView.as_view(), name='email-verify-token'),
