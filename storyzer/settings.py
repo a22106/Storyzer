@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 
 from datetime import timedelta
+import json
 import os
 from pathlib import Path
 from configparser import ConfigParser
@@ -62,6 +63,9 @@ REST_FRAMEWORK = {
         'rest_framework.renderers.JSONRenderer',
     ],
 }
+
+with open('keywords.json', 'r', encoding='utf-8') as f:
+    SCENARIO_KEYWORDS = json.loads(f.read())
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),

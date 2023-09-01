@@ -1,0 +1,40 @@
+Type 0: Historical Drama/War - Russia
+Keywords: Russian, Moscow, Nazi, War, German
+Type 1: Family/Friendship and Holidays
+Keywords: Friends, Dog, Family, Cat, Christmas
+Type 2: Romance/Drama
+Keywords: Woman, Young, Love, Girl, Father
+Type 3: Supernatural and European Settings
+Keywords: Daughter, Evil, France, Vampire, England
+Type 4: Sports - American
+Keywords: Coach, Friends, Football, Basketball, California
+Type 5: Espionage/Political Thriller
+Keywords: CIA, Terrorist, Dangerous, President, FBI
+Type 6: Horror - Zombie/Supernatural
+Keywords: Friends, Killer, Dead, Zombies, Death
+Type 7: Sports Entertainment - Wrestling
+Keywords: Wrestling, Queens, Championship, Women, Tournament
+Type 8: Family Drama
+Keywords: Daughter, Wife, Mother, Sister, Father
+Type 9: Romantic Comedy/Drama
+Keywords: Friends, New, Girlfriend, Boyfriend, Summer
+Type 10: Crime/Detective
+Keywords: Murder, Police, Prison, FBI, Detective
+Type 11: Fantasy - Eastern Influence
+Keywords: Evil, Dragon, China, Battle, Japanese
+Type 12: Legal/Financial Drama
+Keywords: New, Bank, Lawyer, Businessman, Police
+Type 13: Sci-Fi - Alien
+Keywords: Alien, Race, Scientists, Planet, Mars
+Type 14: Crime - Gangster
+Keywords: Murder, Police, Killer, FBI, Gangster
+Type 15: Romantic Drama/Wedding
+Keywords: Friends, Wedding, Love, Husband, Married
+Type 16: Superhero
+Keywords: New, Evil, Batman, Powerful, Alien
+Type 17: Drama - Film Industry
+Keywords: Young, Old, Father, Film, American
+Type 18: Indian Drama/Romance
+Keywords: Father, Daughter, Mumbai, Love, India
+Type 19: War - Various Eras
+Keywords: Soldiers, American, Vietnam, War, Iraq

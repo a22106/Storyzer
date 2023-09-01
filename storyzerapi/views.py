@@ -16,8 +16,6 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from manage import api_host
 import openai
-import re
-from datetime import timedelta
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import User
@@ -221,8 +219,31 @@ class MoviePredictionView(APIView):
                 'genres': openapi.Schema(type=openapi.TYPE_ARRAY, items={'type': 'string'}, description='Movie genres'),
             }
         ),
-        responses={ # Response code
-            200: 'Movie genre predicted successfully',
+        responses={
+            200: openapi.Response(
+                description='Movie genre predicted successfully',
+                examples={
+                    'application/json': {
+                        "revenue": 6097548,
+                        "vote_average": 6.407093524932861,
+                        "scenario": {
+                            "pred_type": 2,
+                            "type_keyword": {
+                                "woman": 52,
+                                "young": 44,
+                                "love": 38,
+                                "girl": 36,
+                                "father": 33,
+                                "man": 29,
+                                "new": 25,
+                                "daughter": 24,
+                                "wife": 22,
+                                "husband": 20
+                            }
+                        }
+                    }
+                }
+            ),
             400: 'Invalid request',
         },
     )
@@ -285,7 +306,13 @@ class MoviePredictionView(APIView):
             pred_revenue = dict(revenue_response.predictions[0])['value']
             pred_vote_average = dict(vote_average_response.predictions[0])['value']
 
-            predictions = {'revenue': pred_revenue, 'vote_average': pred_vote_average, 'scenario_type': int(scenario_type)}
+
+            predictions = {'revenue': pred_revenue, 
+                           'vote_average': pred_vote_average,
+                           'scenario':{'pred_type': int(scenario_type),
+                                       'type_keyword': settings.SCENARIO_KEYWORDS[int(scenario_type)]["keywords"],
+                           }
+            }
 
             return predictions
 
@@ -323,13 +350,43 @@ class MoviePredictionView(APIView):
     
 
 class ChatGPTAnalyzesView(APIView):
-    @swagger_auto_schema()
+    @swagger_auto_schema(
+        operation_description="Analyze text using chatgpt",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT, # Request body will be in JSON format
+            properties={
+                'input': openapi.Schema(type=openapi.TYPE_STRING, description='Input'),
+                'output': openapi.Schema(type=openapi.TYPE_STRING, description='Output'),
+            },
+        ),
+        responses={
+            200: 'Text analyzed successfully',
+            400: 'Invalid request',
+        },
+    )
     def post(self, request):
-                system_prompt = """I want you to act as a movie predictor.
-        I will give you a movie title, scenario, budget, original language, runtime, and genres.
-        And I will give you the prediction result of the movie.
-        Prediction Result is about revenue, vote average.
-        """
+        system_prompt = """I want you to act as a movie predictor.
+        I will give you a movie title, scenario, budget, original language, runtime, and genres in json format.
+        And I will give you the prediction result of the movie, revenue, and vote average in json format.
+        Explain the prediction result of the movie, revenue, and vote average."""
+        user_prompt = "input" + request.data.get('input') + "\n" + "output" + request.data.get('output')
+
+        openai.api_key = settings.OPENAI_API_KEY
+
+        # Generate chat response
+        messages = []
+        messages.append({"role": "system", "content": system_prompt})
+        messages.append({"role": "user", "content": user_prompt})
+
+        response = openai.ChatCompletion.create(
+            model="gpt-3.5-turbo",
+            messages=messages,
+        )
+
+        reply = response.choices[0].message.content
+
+        return Response({"message": reply}, status=status.HTTP_200_OK)
+    
 
 class ChatGPTTranslateView(APIView):
     @swagger_auto_schema(

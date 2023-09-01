@@ -1,6 +1,5 @@
-{
-  "Keywords_ls": [
-    {
+[
+  {
       "type": 0,
       "keywords": {
         "russian": 18,
@@ -300,5 +299,4 @@
         "new": 7
       }
     }
-  ]
-}
+]
