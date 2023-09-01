@@ -97,6 +97,15 @@ TEMPLATES = [
 WSGI_APPLICATION = 'storyzer.wsgi.application'
 
 
+# Vertex AI
+PROJECT = config['VERTEX_AI']['PROJECT']
+LOCATION = config['VERTEX_AI']['LOCATION']
+VOTE_ENDPOINT = config['VERTEX_AI']['VOTE_ENDPOINT']
+REVENUE_ENDPOINT = config['VERTEX_AI']['REVENUE_ENDPOINT']
+CLASSIFICATION_ENDPOINT = config['VERTEX_AI']['CLASSIFICATION_ENDPOINT']
+CREDENTIALS = 'credentials.json'
+
+
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
 
