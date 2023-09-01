@@ -1,0 +1,304 @@
+{
+  "Keywords_ls": [
+    {
+      "type": 0,
+      "keywords": {
+        "russian": 18,
+        "moscow": 13,
+        "nazi": 13,
+        "wife": 10,
+        "new": 9,
+        "german": 7,
+        "daughter": 7,
+        "war": 7,
+        "young": 7,
+        "russia": 7
+      }
+    },
+    {
+      "type": 1,
+      "keywords": {
+        "new": 34,
+        "friends": 23,
+        "dog": 17,
+        "old": 16,
+        "family": 15,
+        "cat": 14,
+        "evil": 12,
+        "live": 11,
+        "father": 11,
+        "christmas": 11
+      }
+    },
+    {
+      "type": 2,
+      "keywords": {
+        "woman": 52,
+        "young": 44,
+        "love": 38,
+        "girl": 36,
+        "father": 33,
+        "man": 29,
+        "new": 25,
+        "daughter": 24,
+        "wife": 22,
+        "husband": 20
+      }
+    },
+    {
+      "type": 3,
+      "keywords": {
+        "daughter": 19,
+        "new": 19,
+        "wife": 18,
+        "evil": 13,
+        "france": 11,
+        "vampire": 10,
+        "french": 10,
+        "woman": 10,
+        "england": 9,
+        "london": 9
+      }
+    },
+    {
+      "type": 4,
+      "keywords": {
+        "new": 32,
+        "coach": 23,
+        "old": 18,
+        "friends": 16,
+        "football": 15,
+        "car": 14,
+        "american": 13,
+        "basketball": 12,
+        "legendary": 11,
+        "california": 11
+      }
+    },
+    {
+      "type": 5,
+      "keywords": {
+        "cia": 34,
+        "terrorist": 23,
+        "new": 21,
+        "terrorists": 15,
+        "dangerous": 14,
+        "president": 13,
+        "fbi": 12,
+        "american": 11,
+        "government": 11,
+        "police": 10
+      }
+    },
+    {
+      "type": 6,
+      "keywords": {
+        "new": 30,
+        "friends": 26,
+        "killer": 22,
+        "dead": 22,
+        "zombies": 21,
+        "young": 19,
+        "students": 16,
+        "death": 16,
+        "home": 14,
+        "mother": 13
+      }
+    },
+    {
+      "type": 7,
+      "keywords": {
+        "wrestling": 36,
+        "queens": 15,
+        "championship": 15,
+        "women": 12,
+        "ford": 11,
+        "hendrix": 11,
+        "new": 9,
+        "tournament": 8,
+        "champion": 7,
+        "saturday": 6
+      }
+    },
+    {
+      "type": 8,
+      "keywords": {
+        "daughter": 39,
+        "wife": 39,
+        "mother": 38,
+        "old": 36,
+        "new": 33,
+        "sister": 32,
+        "father": 21,
+        "son": 17,
+        "live": 17,
+        "brother": 15
+      }
+    },
+    {
+      "type": 9,
+      "keywords": {
+        "new": 71,
+        "friends": 40,
+        "girlfriend": 36,
+        "wife": 31,
+        "boyfriend": 29,
+        "daughter": 29,
+        "summer": 26,
+        "old": 24,
+        "sister": 20,
+        "school": 16
+      }
+    },
+    {
+      "type": 10,
+      "keywords": {
+        "murder": 56,
+        "new": 40,
+        "wife": 38,
+        "police": 35,
+        "daughter": 26,
+        "prison": 25,
+        "fbi": 22,
+        "girlfriend": 20,
+        "detective": 20,
+        "old": 19
+      }
+    },
+    {
+      "type": 11,
+      "keywords": {
+        "evil": 21,
+        "new": 20,
+        "dragon": 16,
+        "friends": 14,
+        "china": 13,
+        "battle": 13,
+        "father": 12,
+        "daughter": 11,
+        "japanese": 11,
+        "legendary": 11
+      }
+    },
+    {
+      "type": 12,
+      "keywords": {
+        "new": 24,
+        "friends": 14,
+        "wife": 12,
+        "bank": 11,
+        "lawyer": 10,
+        "american": 10,
+        "businessman": 10,
+        "police": 9,
+        "young": 9,
+        "murder": 9
+      }
+    },
+    {
+      "type": 13,
+      "keywords": {
+        "alien": 26,
+        "new": 23,
+        "race": 20,
+        "scientists": 12,
+        "home": 11,
+        "planet": 10,
+        "dangerous": 10,
+        "aliens": 10,
+        "mars": 10,
+        "earth": 9
+      }
+    },
+    {
+      "type": 14,
+      "keywords": {
+        "murder": 46,
+        "new": 33,
+        "police": 29,
+        "killer": 22,
+        "fbi": 19,
+        "wife": 18,
+        "young": 18,
+        "gangster": 14,
+        "run": 12,
+        "gang": 11
+      }
+    },
+    {
+      "type": 15,
+      "keywords": {
+        "friends": 31,
+        "new": 29,
+        "wife": 23,
+        "wedding": 21,
+        "love": 18,
+        "man": 17,
+        "husband": 16,
+        "married": 13,
+        "young": 13,
+        "women": 12
+      }
+    },
+    {
+      "type": 16,
+      "keywords": {
+        "new": 44,
+        "evil": 17,
+        "batman": 11,
+        "powerful": 11,
+        "alien": 10,
+        "battle": 10,
+        "superhero": 9,
+        "friends": 9,
+        "superman": 9,
+        "future": 9
+      }
+    },
+    {
+      "type": 17,
+      "keywords": {
+        "new": 44,
+        "young": 35,
+        "old": 24,
+        "father": 21,
+        "wife": 21,
+        "film": 20,
+        "american": 20,
+        "mother": 20,
+        "friends": 15,
+        "women": 15
+      }
+    },
+    {
+      "type": 18,
+      "keywords": {
+        "father": 22,
+        "daughter": 21,
+        "falls": 19,
+        "mumbai": 19,
+        "friends": 17,
+        "love": 17,
+        "india": 15,
+        "girl": 15,
+        "police": 15,
+        "wife": 14
+      }
+    },
+    {
+      "type": 19,
+      "keywords": {
+        "soldiers": 23,
+        "american": 19,
+        "vietnam": 16,
+        "war": 14,
+        "iraq": 11,
+        "battle": 11,
+        "young": 10,
+        "japanese": 10,
+        "afghanistan": 7,
+        "new": 7
+      }
+    }
+  ]
+}
