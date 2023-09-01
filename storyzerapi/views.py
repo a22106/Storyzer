@@ -1,9 +1,12 @@
+import json
+from django.http import QueryDict
 from django.shortcuts import render
 
 # Create your views here.
 from rest_framework import status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework_jwt.utils import jwt_decode_handler
 from django.conf import settings
 from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
@@ -13,7 +16,11 @@ from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from manage import api_host
 import openai
+import re
+from datetime import timedelta
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
+from .models import User
 # Predict View
 from typing import List, Optional
 from typing import Dict
@@ -26,8 +33,6 @@ import re
 import os
 from sentence_transformers import SentenceTransformer
 
-
-from .models import CustomUser as User
 from .serializers import UserSerializer
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -39,7 +44,7 @@ class UserViewSet(viewsets.ModelViewSet):
                          request_body=openapi.Schema(
                              type=openapi.TYPE_OBJECT,
                              properties={
-                                #  'username': openapi.Schema(type=openapi.TYPE_STRING, description='Username'),
+                                 'username': openapi.Schema(type=openapi.TYPE_STRING, description='Username'),
                                  'email': openapi.Schema(type=openapi.TYPE_STRING, description='Email'),
                                  'password': openapi.Schema(type=openapi.TYPE_STRING, description='Password'),
                              },
@@ -54,9 +59,22 @@ class UserViewSet(viewsets.ModelViewSet):
         if serializer.is_valid():
             user = User.objects.create_user(
                 username=serializer.validated_data['username'],
-                email=serializer.validated_data['email'],  # Make sure to save email
+                email=serializer.validated_data['email'],
                 password=serializer.validated_data['password'],
             )
+            
+            jwt_serializer = TokenObtainPairSerializer(data={
+                'email': serializer.validated_data['email'],
+                'password': serializer.validated_data['password'],
+            })
+            
+            if jwt_serializer.is_valid():
+                access_token = str(jwt_serializer.validated_data['access'])
+                refresh_token = str(jwt_serializer.validated_data['refresh'])
+            else:
+                jwt_token = TokenObtainPairSerializer.get_token(user)
+                access_token = str(jwt_token.access_token)
+                refresh_token = str(jwt_token)
 
             # Send email
             token = default_token_generator.make_token(user)
@@ -64,16 +82,49 @@ class UserViewSet(viewsets.ModelViewSet):
             verification_link = f'http://{api_host}/email/verify/{token}/{uid}/'
             
             # Send email
-            send_mail('Email Verification', settings.VERIFICATION_EMAIL_TEMPLATE.format(verification_link)
-                      , settings.EMAIL_HOST_USER, [user.email])
+            send_mail(subject='Email Verification', 
+                      message=settings.VERIFICATION_EMAIL_TEMPLATE.format(verification_link)
+                      , from_email= settings.EMAIL_HOST_USER, recipient_list=[user.email])
             
             return Response(
-                {"message": "User created successfully. Please check your email to verify your account."},
+                {"message": "User created successfully. Please check your email to verify your account.", \
+                "user": serializer.data, "refresh_token": refresh_token, "access_token": access_token},
                 status=status.HTTP_201_CREATED
             )
+            
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+class UserDetailView(APIView):
+    @swagger_auto_schema(
+        operation_description="Get user detail",
+        responses={
+            200: 'User detail retrieved successfully',
+            400: 'Invalid request',
+            404: 'User does not exist',
+        },
+    )
+    def get(self, request):
+        id = request.data.get('id')
+        try:
+            user = User.objects.get(id=id)
+            is_staff = user.is_staff
+            is_active = user.is_active
+            is_verified = user.is_verified
+            is_superuser = user.is_superuser
+            created = user.created
+            last_login = user.last_login
+            return Response({"username": user.username, "email": user.email, \
+                             "is_staff": is_staff, "is_active": is_active, \
+                             "is_verified": is_verified, "is_superuser": is_superuser, \
+                             "created": created, "last_login": last_login}, status=status.HTTP_200_OK)
+        except User.DoesNotExist:
+            return Response({"error": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
+
+def _get_user_id_from_auth(self, request: APIView):
+    return request.__dict__.get("_auth", {}).get("user_id", None)
+
 class EmailVerifyView(APIView):
+
     @swagger_auto_schema(
         operation_description="Send verification email",
         responses={
@@ -81,22 +132,32 @@ class EmailVerifyView(APIView):
             400: 'User does not exist',
         },
     )
-    def post(self, request):
-        email = request.data.get('email') # User model has field `email`
-        print(f"request.data: {request.data}")
-        print(f"Received email: {email}")
+    def post(self, request: APIView):
+        user_id = _get_user_id_from_auth(request)
+        
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.get(id=user_id)
             token = default_token_generator.make_token(user)
             uid = urlsafe_base64_encode(force_bytes(user.pk))
-            verification_link = f'http://{api_host}/email/verify/{token}/{uid}/'
+            verification_link = f'http://{settings.API_HOST}/email/verify/{token}/{uid}/'
             
-            # Send email
-            send_mail('Email Verification', settings.VERIFICATION_EMAIL_TEMPLATE.format(verification_link)
-                      , settings.EMAIL_HOST_USER, [user.email])
+            self._send_verification_email(user, verification_link)
+            
             return Response({"message": "Verification email sent."}, status=status.HTTP_200_OK)
+        
         except User.DoesNotExist:
             return Response({"error": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            # General exception, this could be customized further
+            return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+    def _send_verification_email(self, user, verification_link):
+        send_mail(
+            'Email Verification', 
+            settings.VERIFICATION_EMAIL_TEMPLATE.format(verification_link),
+            settings.EMAIL_HOST_USER, 
+            [user.email]
+        )
                 
 class EmailVerifyTokenView(APIView):
     def get(self, request, token, uid):
@@ -118,17 +179,20 @@ class EmailVerifyTokenView(APIView):
 
 class PasswordResetView(APIView):
     def post(self, request):
-        email = request.data.get('email')
+        user_id = _get_user_id_from_auth(request)
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.get(id=user_id)
             token = default_token_generator.make_token(user)
-            send_mail('Password Reset', f'Your token is {token}', 'from_email@example.com', [email])
+            uid = urlsafe_base64_encode(force_bytes(user.pk))
+            verification_link = f'http://{settings.API_HOST}/password/reset/confirm/?token={token}&uid={uid}'
+            send_mail('Password Reset', settings.VERIFICATION_EMAIL_TEMPLATE.format(verification_link), settings.EMAIL_HOST_USER, [user.email])
             return Response({"message": "Password reset email sent."}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({"error": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
 
 class PasswordResetConfirmView(APIView):
-    def post(self, request):
+    def post(self, request: APIView):
+        print(request.__dict__)
         token = request.data.get('token')
         new_password = request.data.get('new_password')
         try:
@@ -142,32 +206,6 @@ class PasswordResetConfirmView(APIView):
                 return Response({"error": "Invalid token"}, status=status.HTTP_400_BAD_REQUEST)
         except User.DoesNotExist:
             return Response({"error": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
-
-class UserRoleView(APIView):
-    @swagger_auto_schema(
-        operation_descript="Update user role",
-        request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT,
-            properties={
-                'role': openapi.Schema(type=openapi.TYPE_STRING, description='New role for the user'),
-            },
-        ),
-        responses={
-            200: 'Role updated successfully',
-            400: 'User does not exist',
-        },
-    )
-        
-    def put(self, request, id):
-        try:
-            user = User.objects.get(pk=id)
-            role = request.data.get('role')
-            user.role = role  # Assume you have a `role` field in your User model
-            user.save()
-            return Response({"message": "Role updated successfully"}, status=status.HTTP_200_OK)
-        except User.DoesNotExist:
-            return Response({"error": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
-
 
 class MoviePredictionView(APIView):
     @swagger_auto_schema(
@@ -333,3 +371,11 @@ class ChatGPTTranslateView(APIView):
         reply = response.choices[0].message.content
         
         return Response({"message": reply}, status=status.HTTP_200_OK)
+
+class ResultSaveView(APIView):
+    def create(self, request):
+        pass
+        
+
+class ResultListView(APIView):
+    pass
