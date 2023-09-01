@@ -95,7 +95,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'storyzerapi.wsgi.application'
+WSGI_APPLICATION = 'storyzer.wsgi.application'
 
 
 # Vertex AI
