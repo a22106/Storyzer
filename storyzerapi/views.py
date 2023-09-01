@@ -6,7 +6,6 @@ from django.shortcuts import render
 from rest_framework import status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework_jwt.utils import jwt_decode_handler
 from django.conf import settings
 from django.core.mail import send_mail
 from django.contrib.auth.tokens import default_token_generator
@@ -20,7 +19,6 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import User
 # Predict View
-from typing import List, Optional
 from typing import Dict
 from google.cloud import aiplatform
 from google.protobuf import json_format
@@ -209,14 +207,27 @@ class MoviePredictionView(APIView):
     @swagger_auto_schema(
         operation_description="Predict movie genre",
         request_body=openapi.Schema(
-            type=openapi.TYPE_OBJECT, # Request body will be in JSON format
+            type=openapi.TYPE_OBJECT,
             properties={
                 'title': openapi.Schema(type=openapi.TYPE_STRING, description='Movie title'),
                 'scenario': openapi.Schema(type=openapi.TYPE_STRING, description='Movie scenario'),
-                'budget': openapi.Schema(type=openapi.TYPE_INTEGER, description='Movie budget'),
+                'budget': openapi.Schema(type=openapi.TYPE_STRING, description='Movie budget'),
                 'original_language': openapi.Schema(type=openapi.TYPE_STRING, description='Movie original language'),
-                'runtime': openapi.Schema(type=openapi.TYPE_INTEGER, description='Movie runtime'),
-                'genres': openapi.Schema(type=openapi.TYPE_ARRAY, items={'type': 'string'}, description='Movie genres'),
+                'runtime': openapi.Schema(type=openapi.TYPE_STRING, description='Movie runtime'),
+                'genres': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING), description='Movie genres'),
+            },
+            required=['title', 'scenario', 'budget', 'original_language', 'runtime', 'genres'],
+            example={
+                "title": "The Avengers",
+                "scenario": "When an unexpected enemy emerges and threatens global safety and security, Nick Fury, director of the international peacekeeping agency known as S.H.I.E.L.D., finds himself in need of a team to pull the world back from the brink of disaster. Spanning the globe, a daring recruitment effort begins!",
+                "budget": "220000000",
+                "original_language": "en",
+                "runtime": "143",
+                "genres": [
+                    "Science Fiction",
+                    "Action",
+                    "Adventure"
+                ]
             }
         ),
         responses={
