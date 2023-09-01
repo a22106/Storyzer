@@ -186,6 +186,17 @@ class MoviePredictionView(APIView):
         # TODO: get keywords from scenario
         
         # TODO: predict the result from vertex AI tables
+        
+        return Response({"revenue": 1000000}, status=status.HTTP_200_OK)
+    
+class ChatGPTAnalyzesView(APIView):
+    @swagger_auto_schema()
+    def post(self, request):
+                system_prompt = """I want you to act as a movie predictor.
+        I will give you a movie title, scenario, budget, original language, runtime, and genres.
+        And I will give you the prediction result of the movie.
+        Prediction Result is about revenue, vote average.
+        """
 
 class ChatGPTTranslateView(APIView):
     @swagger_auto_schema(
