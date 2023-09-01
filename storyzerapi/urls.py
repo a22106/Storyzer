@@ -11,4 +11,8 @@ urlpatterns = [
     path('password/reset/', views.PasswordResetView.as_view(), name='password-reset'),
     path('password/reset/confirm/', views.PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
     path('users/<int:id>/roles/', views.UserRoleView.as_view(), name='user-roles'),
+    path('chatgpt/translate/', views.ChatGPTTranslateView.as_view(), name='chatgpt-translate'),
+    
+    # 영화 분석
+    path('movie/prediction', views.MoviePredictionView.as_view(), name='movie-prediction'),
 ]

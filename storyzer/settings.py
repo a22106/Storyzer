@@ -74,6 +74,8 @@ EMAIL_USE_TLS = True
 EMAIL_HOST_USER = config['EMAIL']['USER']
 EMAIL_HOST_PASSWORD = config['EMAIL']['PASSWORD']
 
+OPENAI_API_KEY = config['OPENAI']['API_KEY']
+
 ROOT_URLCONF = 'storyzer.urls'
 
 TEMPLATES = [
