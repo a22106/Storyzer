@@ -285,9 +285,9 @@ class MoviePredictionView(APIView):
             pred_revenue = dict(revenue_response.predictions[0])['value']
             pred_vote_average = dict(vote_average_response.predictions[0])['value']
 
-            pred_potential = {'revenue': pred_revenue, 'vote_average': pred_vote_average}
+            predictions = {'revenue': pred_revenue, 'vote_average': pred_vote_average, 'scenario_type': int(scenario_type)}
 
-            return pred_potential
+            return predictions
 
         # Make Input Date
         columns = ['title_embed', 'budget', 'original_language', 'runtime', 
@@ -317,9 +317,9 @@ class MoviePredictionView(APIView):
         # Prediction
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = CREDENTIALS
         instances = {'scenario': scenario, 'potential': potential_instance}
-        pred_potential = pred_scenario(PROJECT, LOCATION, instances)
+        predictions = pred_scenario(PROJECT, LOCATION, instances)
 
-        return Response(pred_potential, status=status.HTTP_200_OK)
+        return Response(predictions, status=status.HTTP_200_OK)
     
 
 class ChatGPTAnalyzesView(APIView):
