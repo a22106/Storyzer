@@ -4,15 +4,19 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    # path('admin/', admin.site.urls),
+    # User
     path('users/', views.UserViewSet.as_view({'post': 'create'}), name='user-create'),
+    path('users/detail', views.UserDetailView.as_view(), name='user-detail'),
     path('email/verify/', views.EmailVerifyView.as_view(), name='email-verify'),
     path('email/verify/<str:token>/<str:uid>/', views.EmailVerifyTokenView.as_view(), name='email-verify-token'),
     path('password/reset/', views.PasswordResetView.as_view(), name='password-reset'),
     path('password/reset/confirm/', views.PasswordResetConfirmView.as_view(), name='password-reset-confirm'),
-    path('users/<int:id>/roles/', views.UserRoleView.as_view(), name='user-roles'),
     path('chatgpt/translate/', views.ChatGPTTranslateView.as_view(), name='chatgpt-translate'),
     
     # 영화 분석
     path('movie/prediction', views.MoviePredictionView.as_view(), name='movie-prediction'),
+    
+    # 결과 저장
+    path('result/save', views.ResultSaveView.as_view(), name='result-save'),
+    path('result/list', views.ResultListView.as_view(), name='result-list'),
 ]

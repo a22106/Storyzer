@@ -1,0 +1,18 @@
+    {'_request': <WSGIRequest: POST '/email/verify/'>, 
+    'parsers': [<rest_framework.parsers.JSONParser object at 0x7f112f589610>, 
+    <rest_framework.parsers.FormParser object at 0x7f112f589650>, 
+    <rest_framework.parsers.MultiPartParser object at 0x7f112f589690>], 
+    'authenticators': [<rest_framework_simplejwt.authentication.JWTAuthentication object at 0x7f112f5896d0>], 
+    'negotiator': <rest_framework.negotiation.DefaultContentNegotiation object at 0x7f112f5897d0>, 
+    'parser_context': {'view': <storyzerapi.views.EmailVerifyView object at 0x7f112f994950>, 
+    'args': (), 'kwargs': {}, 'request': <rest_framework.request.Request: POST '/email/verify/'>, 'encoding': 'utf-8'}, 
+    '_data': <class 'rest_framework.request.Empty'>, '_files': <class 'rest_framework.request.Empty'>, 
+    '_full_data': <class 'rest_framework.request.Empty'>, '_content_type': <class 'rest_framework.request.Empty'>, 
+    '_stream': <class 'rest_framework.request.Empty'>, 'accepted_renderer': <rest_framework.renderers.JSONRenderer object at 0x7f112f589290>, 
+    'accepted_media_type': 'application/json', 'version': None, 'versioning_scheme': None, 
+    '_authenticator': <rest_framework_simplejwt.authentication.JWTAuthentication object at 0x7f112f5896d0>, 
+    '_user': <User: bk22106@gmail.com>, 
+    '_auth': {'token_type': 'access', 'exp': 1693580408, 
+    'iat': 1693578608, 'jti': '8e1e551a3e01459086023ed7fa8fe9af', 'user_id': 4
+        }
+    }
