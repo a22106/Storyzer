@@ -21,6 +21,18 @@ from datetime import timedelta
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 from .models import User
+# Predict View
+from typing import List, Optional
+from typing import Dict
+from google.cloud import aiplatform
+from google.protobuf import json_format
+from google.protobuf.struct_pb2 import Value
+import numpy as np
+import pandas as pd
+import re
+import os
+from sentence_transformers import SentenceTransformer
+
 from .serializers import UserSerializer
 
 class UserViewSet(viewsets.ModelViewSet):
@@ -206,7 +218,7 @@ class MoviePredictionView(APIView):
                 'budget': openapi.Schema(type=openapi.TYPE_INTEGER, description='Movie budget'),
                 'original_language': openapi.Schema(type=openapi.TYPE_STRING, description='Movie original language'),
                 'runtime': openapi.Schema(type=openapi.TYPE_INTEGER, description='Movie runtime'),
-                'genres': openapi.Schema(type=openapi.TYPE_STRING, description='Movie genres'),
+                'genres': openapi.Schema(type=openapi.TYPE_ARRAY, items={'type': 'string'}, description='Movie genres'),
             }
         ),
         responses={ # Response code
@@ -217,16 +229,99 @@ class MoviePredictionView(APIView):
     def post(self, request):
         # check if the scenario are in English. 
         # Otherwise, translate them into English using chatgpt
-        title = request.data.get('title')
-        scenario = request.data.get('scenario')
-        original_language = request.data.get('original_language')
-        
-        # TODO: get keywords from scenario
-        
-        # TODO: predict the result from vertex AI tables
-        
-        return Response({"revenue": 1000000}, status=status.HTTP_200_OK)
+        title = str(request.data.get('title'))
+        scenario = str(request.data.get('scenario'))
+        budget = str(request.data.get('budget'))
+        original_language = str(request.data.get('original_language'))
+        runtime = str(request.data.get('runtime'))
+        genres = request.data.get('genres')
+
+        # Model
+        PROJECT = settings.PROJECT
+        LOCATION = settings.LOCATION
+        VOTE_ENDPOINT = settings.VOTE_ENDPOINT
+        REVENUE_ENDPOINT = settings.REVENUE_ENDPOINT
+        CLASSIFICATION_ENDPOINT = settings.CLASSIFICATION_ENDPOINT
+        CREDENTIALS = settings.CREDENTIALS
+
+        def pred_scenario(project: str,
+                            # endpoint_id: str,
+                            location: str,
+                            instances: Dict,
+                            api_endpoint: str = "us-central1-aiplatform.googleapis.com",):
+
+            scenario_type_instance = {'mimeType': 'text/plain',
+                                      'content': instances['scenario']}
+            potential_instance = instances['potential']
+            
+            # Prediction Service API
+            client_options = {"api_endpoint": api_endpoint}
+            client = aiplatform.gapic.PredictionServiceClient(client_options=client_options)
+            parameters_dict = {}
+            parameters = json_format.ParseDict(parameters_dict, Value())
+
+            # Prediction Scenario type
+            scenario_type_instance = json_format.ParseDict(scenario_type_instance, Value())
+            scenario_type_instance = [scenario_type_instance]
+
+            scenario_endpoint = client.endpoint_path(project=project, location=location, endpoint=CLASSIFICATION_ENDPOINT)
+            scenario_response = client.predict(endpoint=scenario_endpoint, instances=scenario_type_instance, parameters=parameters)
+
+            pred_scenario = dict(scenario_response.predictions[0])
+            top_confidence = np.argmax(pred_scenario['confidences'])
+            scenario_type = pred_scenario['displayNames'][top_confidence]
+
+            # Prediction Revenue, Vote Average
+            potential_instance['scenario_type'] = scenario_type
+            potential_instance = json_format.ParseDict(potential_instance, Value())
+            potential_instance = [potential_instance]
+
+            revenue_endpoint = client.endpoint_path(project=project, location=location, endpoint=REVENUE_ENDPOINT)
+            vote_average_endpoint = client.endpoint_path(project=project, location=location, endpoint=VOTE_ENDPOINT)
+
+            revenue_response = client.predict(endpoint=revenue_endpoint, instances=potential_instance, parameters=parameters)
+            vote_average_response = client.predict(endpoint=vote_average_endpoint, instances=potential_instance, parameters=parameters)
+
+            pred_revenue = dict(revenue_response.predictions[0])['value']
+            pred_vote_average = dict(vote_average_response.predictions[0])['value']
+
+            pred_potential = {'revenue': pred_revenue, 'vote_average': pred_vote_average}
+
+            return pred_potential
+
+        # Make Input Date
+        columns = ['title_embed', 'budget', 'original_language', 'runtime', 
+                    'genre_Action', 'genre_Adventure', 'genre_Animation', 'genre_Comedy', 'genre_Crime',
+                    'genre_Documentary', 'genre_Drama', 'genre_Family', 'genre_Fantasy',
+                    'genre_History', 'genre_Horror', 'genre_Music', 'genre_Mystery',
+                    'genre_Romance', 'genre_Science_Fiction', 'genre_TV_Movie',
+                    'genre_Thriller', 'genre_War', 'genre_Western',]        
+        df = pd.DataFrame(columns=columns)
+
+        ## title embedding
+        model = SentenceTransformer('all-mpnet-base-v1')
+        sentences = title
+        title_embed = model.encode(sentences)
+
+        df['title_embed'] = [title_embed]
+        df['budget'] = [budget]
+        df['original_language'] = [original_language]
+        df['runtime'] = [runtime]
+        for genre in genres:
+            df['genre_'+genre] = [1]
+        df.fillna(0, inplace=True)
+        df = df.astype(str)
+
+        potential_instance = df.iloc[0].to_dict()
+
+        # Prediction
+        os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = CREDENTIALS
+        instances = {'scenario': scenario, 'potential': potential_instance}
+        pred_potential = pred_scenario(PROJECT, LOCATION, instances)
+
+        return Response(pred_potential, status=status.HTTP_200_OK)
     
+
 class ChatGPTAnalyzesView(APIView):
     @swagger_auto_schema()
     def post(self, request):
