@@ -1,29 +1,34 @@
 {
     "page": 1,
-    "input": {
-        "title": "The Avengers",
-        "scenario": "When an unexpected enemy emerges and",
-        "budget": "0",
-        "language": "en",
-        "runtime": "120",
-        "genres": [
-            "Science Fiction",
-            "Action",
-            "Adventure"
-        ]
-    },
-    "output": {
-        "revenue": 0,
-        "voteAverage": 0,
-        "scenario": {
-            "predType": 0,
-            "keywords":{
-                "keyword1": 0,
-                "keyword2": 0
-            }
+    "results":[
+        {
+            "input": {
+                "title": "The Avengers",
+                "scenario": "When an unexpected enemy emerges and",
+                "budget": "0",
+                "language": "en",
+                "runtime": "120",
+                "genres": [
+                    "Science Fiction",
+                    "Action",
+                    "Adventure"
+                ]
+            },
+            "output": {
+                "revenue": 0,
+                "voteAverage": 0,
+                "scenario": {
+                    "predType": 0,
+                    "keywords":{
+                        "keyword1": 0,
+                        "keyword2": 0
+                    }
+                }
+            },
+            "analyze":"",
+            "category": "movie"
         }
-    },
-    "analyze":"",
+    ],
     "totalPages": 1,
     "totalResults": 1
 }

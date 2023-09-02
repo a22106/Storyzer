@@ -60,8 +60,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     
 class Results(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    result = models.JSONField()
-    content = models.TextField(null=True, blank=True, max_length=50)
+    input = models.JSONField(default=dict)
+    output = models.JSONField(default=dict)
+    analyze = models.TextField(null=True, blank=True)
+    category = models.TextField(null=True, blank=True, max_length=50)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     

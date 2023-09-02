@@ -289,7 +289,9 @@ class MoviePredictionView(APIView):
         if user_db is None:
             logging.error(f"User does not exist. user_id: {user_id}")
             
+        # TODO: Input Json이 형식에 맞는 key값을 가지고 있는지 검증
         input = request.data
+        
         
         # check if the scenario are in English. 
         # Otherwise, translate them into English using chatgpt
@@ -401,22 +403,22 @@ class MoviePredictionView(APIView):
         user_prompt = "input" + json.dumps(request.data) + "\n" + "output" + json.dumps(predictions)
         reply = ChatGPT(user_prompt, system_prompt).chatgpt_request()
         
-        predictions['analyze'] = reply
-        
-        
         
         if user_id is not None:
-            results = Results.objects.create(user_id=user_id, result=predictions, content="movie")
+            results = Results.objects.create(user_id=user_id, input=request.data, 
+                                             output=predictions, analyze=reply, category="movie")
             results.save()
             logging.info(f"User prediction saved. user_id: {user_id}")
         else: # TODO: 유저 로그인 기능 완료 시 삭제
-            results = Results.objects.create(user_id=5, result=predictions, content="movie")
+            results = Results.objects.create(user_id=5, input=request.data,
+                                            output=predictions, analyze=reply, category="movie")
             results.save()
             logging.info(f"User prediction saved to default user. user_id: {user_id}")
         
         return Response({"input": request.data, 
                          "output": predictions, 
-                         "analyze": reply}, status=status.HTTP_200_OK)
+                         "analyze": reply, "category": "movie"
+                         }, status=status.HTTP_200_OK)
         
     
 class ChatGPTView(APIView):
@@ -542,30 +544,44 @@ class ResultListView(APIView):
             400: 'Invalid request',
         },
     )
-    def get(self, request: Request):
-        try:
-            user_id = _get_user_id_from_auth(request)
-            content = request.query_params.get('content')
-            user_db = User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            user_db = None
-        
-        if user_db is None:
-            results = Results.objects.all()
+    def get(self, request: Request, user_id: int=None, category: str=None, page: int=1):
+        results = Results.objects.all()
+        user_id = _get_user_id_from_auth(request)
+        if user_id is not None:
+            user_db = User.objects.filter(id=user_id).first()
+            if user_db is not None:
+                results = results.filter(user_id=user_id)
+            else:
+                return Response({"error": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        if category is not None:
+            results = results.filter(category=category)
         else:
-            results = Results.objects.filter(user_id=user_id)
+            category = request.query_params.get('category')
+            results = results.filter(category=category)
         
-        # TODO: 유저 로그인 기능 완료 시 404 에러 추가
-        
-        if content is not None:
-            results = results.filter(content=content)
-        
+        if page is None:
+            page = request.query_params.get('page') if request.query_params.get('page') is not None else 1
+        print(category)
+        print(request.query_params)
+            
         try:
-            results_list = [x.result for x in results]
+            # 10 results per page
+            results_list = []
+            for result in results:
+                results_list.append({"input": result.input, 
+                                     "output": result.output, 
+                                     "analyze": result.analyze, 
+                                     "category": result.category})
+            results_list = results_list[(page-1)*10:page*10]
+            
+            response_data = {
+                "page": page,
+                "results": results_list,
+                "totalResults": len(results_list),
+                "totalPages": len(results_list) // 10 + 1,
+            }
         except Exception as e:
             logging.error(f"Error occurred while getting results. error: {str(e)}")
             logging.info(f"{traceback.format_exc()}")
-            
             return Response({"error": f"Error occurred while getting results. error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-        return Response(results_list, status=status.HTTP_200_OK)
+        return Response(response_data, status=status.HTTP_200_OK)
