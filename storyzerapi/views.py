@@ -108,10 +108,6 @@ class UserDetailView(APIView):
     )
     def get(self, request: Request):
         user_id = _get_user_id_from_auth(request)
-        logging.info(f"request: {request.__dict__}")
-        logging.info(f"id: {user_id}")
-        logging.info(f"request.user: {request.user}")
-        logging.info(f"request.data: {request.data}")
         
         try:
             user_db = User.objects.get(id=user_id)
@@ -231,16 +227,16 @@ class MoviePredictionView(APIView):
                 'title': openapi.Schema(type=openapi.TYPE_STRING, description='Movie title'),
                 'scenario': openapi.Schema(type=openapi.TYPE_STRING, description='Movie scenario'),
                 'budget': openapi.Schema(type=openapi.TYPE_STRING, description='Movie budget'),
-                'original_language': openapi.Schema(type=openapi.TYPE_STRING, description='Movie original language'),
+                'language': openapi.Schema(type=openapi.TYPE_STRING, description='Movie language'),
                 'runtime': openapi.Schema(type=openapi.TYPE_STRING, description='Movie runtime'),
                 'genres': openapi.Schema(type=openapi.TYPE_ARRAY, items=openapi.Schema(type=openapi.TYPE_STRING), description='Movie genres'),
             },
-            required=['title', 'scenario', 'budget', 'original_language', 'runtime', 'genres'],
+            required=['title', 'scenario', 'budget', 'language', 'runtime', 'genres'],
             example={
                 "title": "The Avengers",
                 "scenario": "When an unexpected enemy emerges and threatens global safety and security, Nick Fury, director of the international peacekeeping agency known as S.H.I.E.L.D., finds himself in need of a team to pull the world back from the brink of disaster. Spanning the globe, a daring recruitment effort begins!",
                 "budget": "220000000",
-                "original_language": "en",
+                "language": "en",
                 "runtime": "143",
                 "genres": [
                     "Science Fiction",
@@ -255,7 +251,7 @@ class MoviePredictionView(APIView):
                 examples={
                     'application/json': {
                         "revenue": 6097548,
-                        "vote_average": 6.407093524932861,
+                        "vote_average": 6.407,
                         "scenario": {
                             "pred_type": 2,
                             "type_keyword": {
@@ -281,8 +277,7 @@ class MoviePredictionView(APIView):
 
         # check if the user is logged in
         try:
-            user_email = request._user.email
-            user_id = User.objects.get(email=user_email).id
+            user_id = _get_user_id_from_auth(request)
             user_db = User.objects.get(id=user_id)
         except AttributeError:
             user_id = None
@@ -291,22 +286,19 @@ class MoviePredictionView(APIView):
             user_id = None
             user_db = None
             logging.error(f"User does not exist. \n{traceback.format_exc()}")
-        # print(request.__dict__)
-        # print(request.data)
-        # user_id = request.data.get('user_id')
-        
         if user_db is None:
             logging.error(f"User does not exist. user_id: {user_id}")
-        #     return Response({"error": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+            
+        input = request.data
         
         # check if the scenario are in English. 
         # Otherwise, translate them into English using chatgpt
-        title = str(request.data.get('title'))
-        scenario = str(request.data.get('scenario'))
-        budget = str(request.data.get('budget'))
-        original_language = str(request.data.get('original_language'))
-        runtime = str(request.data.get('runtime'))
-        genres = request.data.get('genres')
+        title = str(input.get('title'))
+        scenario = str(input.get('scenario'))
+        budget = str(input.get('budget'))
+        original_language = str(input.get('language'))
+        runtime = str(input.get('runtime'))
+        genres = input.get('genres')
 
         # Model
         PROJECT = settings.PROJECT
@@ -397,6 +389,7 @@ class MoviePredictionView(APIView):
         instances = {'scenario': scenario, 'potential': potential_instance}
         predictions = pred_scenario(PROJECT, LOCATION, instances)
         
+        # ChatGPT
         system_prompt = """I'd like you to serve as a movie performance predictor. 
         You will receive comprehensive input data in JSON format, 
         including the movie's title, plot synopsis, budget, original language, runtime, genres, key cast, and director. 
@@ -410,6 +403,8 @@ class MoviePredictionView(APIView):
         
         predictions['analyze'] = reply
         
+        
+        
         if user_id is not None:
             results = Results.objects.create(user_id=user_id, result=predictions, content="movie")
             results.save()
@@ -419,7 +414,9 @@ class MoviePredictionView(APIView):
             results.save()
             logging.info(f"User prediction saved to default user. user_id: {user_id}")
         
-        return Response(predictions, status=status.HTTP_200_OK)
+        return Response({"input": request.data, 
+                         "output": predictions, 
+                         "analyze": reply}, status=status.HTTP_200_OK)
         
     
 class ChatGPTView(APIView):
@@ -547,16 +544,6 @@ class ResultListView(APIView):
     )
     def get(self, request: Request):
         try:
-            # logging.info(f"Request: {request.__dict__}")
-            # logging.info(f"Request data: {request.data}")
-            # logging.info(f"Request query params: {request.query_params}")
-            # logging.info(f"User: {request._user}")
-            # user_id = request.query_params.get('user_id')
-            try:
-                user_email = request._user.email
-            except AttributeError:
-                return Response({"error": "Unauthorized. Token expired or invalid."}, status=status.HTTP_401_UNAUTHORIZED)
-            
             user_id = _get_user_id_from_auth(request)
             content = request.query_params.get('content')
             user_db = User.objects.get(id=user_id)
