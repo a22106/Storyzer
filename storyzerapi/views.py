@@ -7,6 +7,7 @@ from django.shortcuts import render
 
 # Create your views here.
 from rest_framework import status, viewsets
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.conf import settings
@@ -127,8 +128,10 @@ class UserDetailView(APIView):
         except User.DoesNotExist:
             return Response({"error": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
-def _get_user_id_from_auth(request: APIView):
-    return request.__dict__.get("_auth", {}).get("user_id", None)
+def _get_user_id_from_auth(request: Request):
+    # If the request is authenticated, request.user should be a user instance.
+    user = request.user
+    return getattr(user, 'id', None)
 
 class EmailVerifyView(APIView):
 
@@ -544,7 +547,11 @@ class ResultListView(APIView):
             # logging.info(f"Request query params: {request.query_params}")
             # logging.info(f"User: {request._user}")
             # user_id = request.query_params.get('user_id')
-            user_email = request._user.email
+            try:
+                user_email = request._user.email
+            except AttributeError:
+                return Response({"error": "Unauthorized. Token expired or invalid."}, status=status.HTTP_401_UNAUTHORIZED)
+            
             user_id = User.objects.get(email=user_email).id
             content = request.query_params.get('content')
             user_db = User.objects.get(id=user_id)
