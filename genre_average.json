@@ -1,0 +1,116 @@
+[
+  {
+    "Action": {
+      "vote_average": 6.31,
+      "revenue": 129165197
+    }
+  },
+  {
+    "Adventure": {
+      "vote_average": 6.32,
+      "revenue": 216948037
+    }
+  },
+  {
+    "Animation": {
+      "vote_average": 6.58,
+      "revenue": 211283017
+    }
+  },
+  {
+    "Comedy": {
+      "vote_average": 6.17,
+      "revenue": 78530134
+    }
+  },
+  {
+    "Crime": {
+      "vote_average": 6.44,
+      "revenue": 64980288
+    }
+  },
+  {
+    "Documentary": {
+      "vote_average": 7.0,
+      "revenue": 17454494
+    }
+  },
+  {
+    "Drama": {
+      "vote_average": 6.63,
+      "revenue": 52937947
+    }
+  },
+  {
+    "Family": {
+      "vote_average": 6.28,
+      "revenue": 165642889
+    }
+  },
+  {
+    "Fantasy": {
+      "vote_average": 6.33,
+      "revenue": 188477216
+    }
+  },
+  {
+    "History": {
+      "vote_average": 6.88,
+      "revenue": 64864961
+    }
+  },
+  {
+    "Horror": {
+      "vote_average": 5.91,
+      "revenue": 49800077
+    }
+  },
+  {
+    "Music": {
+      "vote_average": 6.64,
+      "revenue": 83054985
+    }
+  },
+  {
+    "Mystery": {
+      "vote_average": 6.29,
+      "revenue": 71137043
+    }
+  },
+  {
+    "Romance": {
+      "vote_average": 6.32,
+      "revenue": 62792667
+    }
+  },
+  {
+    "Science_Fiction": {
+      "vote_average": 6.19,
+      "revenue": 165401892
+    }
+  },
+  {
+    "TV_Movie": {
+      "vote_average": 5.75,
+      "revenue": 15149892
+    }
+  },
+  {
+    "Thriller": {
+      "vote_average": 6.22,
+      "revenue": 75369795
+    }
+  },
+  {
+    "War": {
+      "vote_average": 6.78,
+      "revenue": 78008788
+    }
+  },
+  {
+    "Western": {
+      "vote_average": 6.48,
+      "revenue": 73145343
+    }
+  }
+]

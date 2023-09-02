@@ -276,6 +276,7 @@ class MoviePredictionView(APIView):
         CLASSIFICATION_ENDPOINT = settings.CLASSIFICATION_ENDPOINT
         CREDENTIALS = settings.CREDENTIALS
 
+        # Prediction Service API (Vertex AI)
         def pred_scenario(project: str,
                             # endpoint_id: str,
                             location: str,
@@ -286,13 +287,12 @@ class MoviePredictionView(APIView):
                                       'content': instances['scenario']}
             potential_instance = instances['potential']
             
-            # Prediction Service API
             client_options = {"api_endpoint": api_endpoint}
             client = aiplatform.gapic.PredictionServiceClient(client_options=client_options)
             parameters_dict = {}
             parameters = json_format.ParseDict(parameters_dict, Value())
 
-            # Prediction Scenario type
+            ## Prediction Scenario type
             scenario_type_instance = json_format.ParseDict(scenario_type_instance, Value())
             scenario_type_instance = [scenario_type_instance]
 
@@ -303,7 +303,7 @@ class MoviePredictionView(APIView):
             top_confidence = np.argmax(pred_scenario['confidences'])
             scenario_type = pred_scenario['displayNames'][top_confidence]
 
-            # Prediction Revenue, Vote Average
+            ## Prediction Revenue, Vote Average
             potential_instance['scenario_type'] = scenario_type
             potential_instance = json_format.ParseDict(potential_instance, Value())
             potential_instance = [potential_instance]
