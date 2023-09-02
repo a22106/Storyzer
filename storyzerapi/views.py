@@ -270,10 +270,23 @@ class MoviePredictionView(APIView):
         },
     )
     def post(self, request):
+
         # check if the user is logged in
-        user_id = _get_user_id_from_auth(request)
+        try:
+            user_email = request._user.email
+            user_id = User.objects.get(email=user_email).id
+            user_db = User.objects.get(id=user_id)
+        except AttributeError:
+            user_id = None
+            user_db = None
+        except User.DoesNotExist:
+            user_id = None
+            user_db = None
+            logging.error(f"User does not exist. \n{traceback.format_exc()}")
+        # print(request.__dict__)
+        # print(request.data)
+        # user_id = request.data.get('user_id')
         
-        user_db = User.objects.get(id=user_id)
         if user_db is None:
             logging.error(f"User does not exist. user_id: {user_id}")
         #     return Response({"error": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
@@ -399,38 +412,7 @@ class MoviePredictionView(APIView):
             logging.info(f"User prediction saved to default user. user_id: {user_id}")
         
         return Response(predictions, status=status.HTTP_200_OK)
-    
-class ResultListView(APIView):
-    @swagger_auto_schema( 
-        operation_description="Get results",
-        responses={
-            200: 'Results retrieved successfully',
-            400: 'Invalid request',
-        },
-    )
-    def get(self, request, user_id: int = None, content: str = None):
-        user_db = User.objects.get(id=user_id)
-        if user_db is None:
-            results = Results.objects.all()
-        else:
-            results = Results.objects.filter(user_id=user_id)
         
-        # TODO: 유저 로그인 기능 완료 시 404 에러 추가
-        
-        if content is not None:
-            results = results.filter(content=content)
-        
-        try:
-            results_list = [x.result for x in results]
-        except Exception as e:
-            logging.error(f"Error occurred while getting results. error: {str(e)}")
-            logging.info(f"{traceback.format_exc()}")
-            
-            return Response({"error": f"Error occurred while getting results. error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-        
-        return Response(results_list, status=status.HTTP_200_OK)
-        
-            
     
 class ChatGPTView(APIView):
     @swagger_auto_schema(
@@ -547,6 +529,44 @@ class ResultSaveView(APIView):
     def create(self, request):
         pass
         
-
 class ResultListView(APIView):
-    pass
+    @swagger_auto_schema( 
+        operation_description="Get results",
+        responses={
+            200: 'Results retrieved successfully',
+            400: 'Invalid request',
+        },
+    )
+    def get(self, request):
+        try:
+            # logging.info(f"Request: {request.__dict__}")
+            # logging.info(f"Request data: {request.data}")
+            # logging.info(f"Request query params: {request.query_params}")
+            # logging.info(f"User: {request._user}")
+            # user_id = request.query_params.get('user_id')
+            user_email = request._user.email
+            user_id = User.objects.get(email=user_email).id
+            content = request.query_params.get('content')
+            user_db = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            user_db = None
+        
+        if user_db is None:
+            results = Results.objects.all()
+        else:
+            results = Results.objects.filter(user_id=user_id)
+        
+        # TODO: 유저 로그인 기능 완료 시 404 에러 추가
+        
+        if content is not None:
+            results = results.filter(content=content)
+        
+        try:
+            results_list = [x.result for x in results]
+        except Exception as e:
+            logging.error(f"Error occurred while getting results. error: {str(e)}")
+            logging.info(f"{traceback.format_exc()}")
+            
+            return Response({"error": f"Error occurred while getting results. error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        return Response(results_list, status=status.HTTP_200_OK)

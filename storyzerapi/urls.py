@@ -19,6 +19,6 @@ urlpatterns = [
     path('movie/prediction', views.MoviePredictionView.as_view(), name='movie-prediction'),
     
     # 결과 저장
-    path('result/save', views.ResultSaveView.as_view(), name='result-save'),
+    # path('result/save', views.ResultSaveView.as_view(), name='result-save'),
     path('result/list', views.ResultListView.as_view(), name='result-list'),
 ]
