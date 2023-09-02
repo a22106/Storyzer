@@ -102,6 +102,7 @@ class UserViewSet(viewsets.ModelViewSet):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class UserDetailView(APIView):
+    @method_decorator(verify_user)
     @swagger_auto_schema(
         operation_description="Get user detail",
         responses={
@@ -138,8 +139,20 @@ def _get_user_id_from_auth(request: Request):
     user = request.user
     return getattr(user, 'id', None)
 
-class EmailVerifyView(APIView):
+class Email():
+    def __init__(self, email):
+        self.email = email
+        
+    def send_verification_email(self, verification_link):
+        send_mail(
+            'Storyzer Email Verification', 
+            settings.VERIFICATION_EMAIL_TEMPLATE.format(verification_link),
+            settings.EMAIL_HOST_USER, 
+            [self.email]
+        )
 
+class EmailVerifyView(APIView):
+    @method_decorator(verify_user)
     @swagger_auto_schema(
         operation_description="Send verification email",
         responses={
@@ -156,7 +169,8 @@ class EmailVerifyView(APIView):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             verification_link = f'http://{settings.API_HOST}/email/verify/{token}/{uid}/'
             
-            self._send_verification_email(user, verification_link)
+            # Send email
+            Email(user.email).send_verification_email(verification_link)
             
             return Response({"message": "Verification email sent."}, status=status.HTTP_200_OK)
         
@@ -165,14 +179,6 @@ class EmailVerifyView(APIView):
         except Exception as e:
             # General exception, this could be customized further
             return Response({"error": f"An error occurred: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-    def _send_verification_email(self, user, verification_link):
-        send_mail(
-            'Email Verification', 
-            settings.VERIFICATION_EMAIL_TEMPLATE.format(verification_link),
-            settings.EMAIL_HOST_USER, 
-            [user.email]
-        )
                 
 class EmailVerifyTokenView(APIView):
     def get(self, request, token, uid):
@@ -193,6 +199,7 @@ class EmailVerifyTokenView(APIView):
             return Response({"error": "User does not exist or token is invalid"}, status=status.HTTP_400_BAD_REQUEST)
 
 class PasswordResetView(APIView):
+    @method_decorator(verify_user)
     def post(self, request: Request):
         user_id = _get_user_id_from_auth(request)
         try:
@@ -207,7 +214,6 @@ class PasswordResetView(APIView):
 
 class PasswordResetConfirmView(APIView):
     def post(self, request: APIView):
-        print(request.__dict__)
         token = request.data.get('token')
         new_password = request.data.get('new_password')
         try:
@@ -279,23 +285,23 @@ class MoviePredictionView(APIView):
         },
     )
     def post(self, request):
-
-        # check if the user is logged in
         try:
             user_id = _get_user_id_from_auth(request)
             user_db = User.objects.get(id=user_id)
         except AttributeError:
-            user_id = None
-            user_db = None
+            logging.error(f"User is not authenticated. \n{traceback.format_exc()}")
+            return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
         except User.DoesNotExist:
-            user_id = None
-            user_db = None
             logging.error(f"User does not exist. \n{traceback.format_exc()}")
+            return Response({"error": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
         if user_db is None:
             logging.error(f"User does not exist. user_id: {user_id}")
             
         # TODO: Input Json이 형식에 맞는 key값을 가지고 있는지 검증
-        input = request.data
+        with open('storyzerapi/formats/movie_result_format.json', 'r') as f:
+            movie_result_format = json.load(f)
+            input_format = movie_result_format['results'][0]['input']
+            input_keys = list(input_format.keys())
         
         # check if the scenario are in English. 
         # Otherwise, translate them into English using chatgpt
@@ -308,6 +314,10 @@ class MoviePredictionView(APIView):
         
         # Translate scenario into English
         scenario = scenario.replace('\n', ' ') # remove line breaks
+        
+        # TODO: scenario가 scenario가 아닌 경우 제대로 된 시나리오를 입력하라는 메시지를 출력
+        scenario_classification = ChatGPT(scenario, settings.CHATGPT['system_prompt']['scenario_classification']).chatgpt_request() # 시나리오 분류
+        
         scenario = ChatGPT(scenario, settings.CHATGPT['system_prompt']['translate_en'] 
                            ,model="gpt-3.5-turbo").chatgpt_request() # 영어로 번역
         
@@ -442,6 +452,11 @@ class MoviePredictionView(APIView):
                          "analyze": reply, "category": "movie"
                          }, status=status.HTTP_200_OK)
         
+class AverageGenresView(APIView):
+    def get(self, request):
+        with open('genre_average.json', 'r') as f:
+            genre_average = json.load(f)
+        return Response(genre_average, status=status.HTTP_200_OK)
     
 class ChatGPTView(APIView):
     @swagger_auto_schema(
@@ -552,6 +567,7 @@ class ResultSaveView(APIView):
         pass
         
 class ResultListView(APIView):
+    @method_decorator(verify_user)
     @swagger_auto_schema(
         operation_description="Get results",
         manual_parameters=[
@@ -565,6 +581,7 @@ class ResultListView(APIView):
         },
     )
     def get(self, request: Request, *args, **kwargs):
+        # print(request.__dict__)
         results = Results.objects.all()
         user_id = _get_user_id_from_auth(request)
         user_id = request.query_params.get('user_id') if request.query_params.get('user_id') is not None else user_id
@@ -591,7 +608,7 @@ class ResultListView(APIView):
                                      "output": result.output, 
                                      "analyze": result.analyze, 
                                      "category": result.category})
-            results_list = results_list[(page-1)*10:page*10]
+            results_list = results_list[(page-1)*10:page*10] if len(results_list) > 10 else results_list
             
             response_data = {
                 "page": page,

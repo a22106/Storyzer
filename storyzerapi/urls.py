@@ -19,6 +19,10 @@ urlpatterns = [
     # 영화 분석
     path('movie/prediction', views.MoviePredictionView.as_view(), name='movie-prediction'),
     
+    # 평균
+    path('average/genres', views.AverageGenresView.as_view(), name='average-genres'),
+    
+    
     # 결과 저장
     # path('result/save', views.ResultSaveView.as_view(), name='result-save'),
     path('result/list', views.ResultListView.as_view(), name='result-list'),

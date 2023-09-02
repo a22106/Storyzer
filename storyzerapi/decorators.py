@@ -7,7 +7,7 @@ from rest_framework.request import Request
 def verify_user(fun):
     @wraps(fun)
     def wrapper(*args, **kwargs):
-        request = args[0]
+        request = args[0] if isinstance(args[0], Request) else args[1]
         user_id = _get_user_id_from_auth(request)
         if user_id is None:
             return Response({"error": "User is not authenticated"}, status=status.HTTP_401_UNAUTHORIZED)
@@ -16,5 +16,5 @@ def verify_user(fun):
 
 def _get_user_id_from_auth(request: Request):
     # If the request is authenticated, request.user should be a user instance.
-    user = request.user
+    user = request.user if hasattr(request, 'user') else request._auth.get('user_id')
     return getattr(user, 'id', None)
