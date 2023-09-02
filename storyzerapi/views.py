@@ -35,7 +35,8 @@ from sentence_transformers import SentenceTransformer
 
 from .serializers import UserSerializer
 
-logging.basicConfig(level=logging.INFO, format='[%(asctime)s %(levelname)s] %(message)s')
+logging.basicConfig(level=logging.INFO, format='[%(asctime)s %(levelname)s] %(message)s',
+                    datefmt='%d/%b/%Y %H:%M:%S')
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -105,23 +106,27 @@ class UserDetailView(APIView):
             404: 'User does not exist',
         },
     )
-    def get(self, request):
-        id = _get_user_id_from_auth(request)
+    def get(self, request: Request):
+        user_id = _get_user_id_from_auth(request)
+        logging.info(f"request: {request.__dict__}")
+        logging.info(f"id: {user_id}")
+        logging.info(f"request.user: {request.user}")
+        logging.info(f"request.data: {request.data}")
         
         try:
-            user = User.objects.get(id=id)
-            is_staff = user.is_staff
-            is_active = user.is_active
-            is_verified = user.is_verified
-            is_superuser = user.is_superuser
-            created = user.created
-            user.last_login = datetime.datetime.now()
-            last_login = user.last_login
+            user_db = User.objects.get(id=user_id)
+            is_staff = user_db.is_staff
+            is_active = user_db.is_active
+            is_verified = user_db.is_verified
+            is_superuser = user_db.is_superuser
+            created = user_db.created
+            user_db.last_login = datetime.datetime.now()
+            last_login = user_db.last_login
 
             # Update last login
-            user.save()
+            user_db.save()
             
-            return Response({"username": user.username, "email": user.email, \
+            return Response({"username": user_db.username, "email": user_db.email, \
                              "is_staff": is_staff, "is_active": is_active, \
                              "is_verified": is_verified, "is_superuser": is_superuser, \
                              "created": created, "last_login": last_login}, status=status.HTTP_200_OK)
@@ -188,7 +193,7 @@ class EmailVerifyTokenView(APIView):
             return Response({"error": "User does not exist or token is invalid"}, status=status.HTTP_400_BAD_REQUEST)
 
 class PasswordResetView(APIView):
-    def post(self, request):
+    def post(self, request: Request):
         user_id = _get_user_id_from_auth(request)
         try:
             user = User.objects.get(id=user_id)
@@ -432,7 +437,7 @@ class ChatGPTView(APIView):
             400: 'Invalid request',
         },
     )
-    def post(self, request):
+    def post(self, request: Request):
         user_id = _get_user_id_from_auth(request)
         user_db = User.objects.get(id=user_id)
         if user_db is None: # TODO: 유저 로그인 검증 부분 별도의 데코레이터로 분리
@@ -540,7 +545,7 @@ class ResultListView(APIView):
             400: 'Invalid request',
         },
     )
-    def get(self, request):
+    def get(self, request: Request):
         try:
             # logging.info(f"Request: {request.__dict__}")
             # logging.info(f"Request data: {request.data}")
@@ -552,7 +557,7 @@ class ResultListView(APIView):
             except AttributeError:
                 return Response({"error": "Unauthorized. Token expired or invalid."}, status=status.HTTP_401_UNAUTHORIZED)
             
-            user_id = User.objects.get(email=user_email).id
+            user_id = _get_user_id_from_auth(request)
             content = request.query_params.get('content')
             user_db = User.objects.get(id=user_id)
         except User.DoesNotExist:
