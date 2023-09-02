@@ -1,116 +1,344 @@
 [
   {
     "Action": {
-      "vote_average": 6.31,
-      "revenue": 129165197
+      "vote_average": {
+        "min": 1.0,
+        "max": 10.0,
+        "mean": 6.31,
+        "std": 1.15,
+        "median": 6.3
+      },
+      "revenue": {
+        "min": 1,
+        "max": 2797800564,
+        "mean": 129165197,
+        "std": 240198221,
+        "median": 35164920
+      }
     }
   },
   {
     "Adventure": {
-      "vote_average": 6.32,
-      "revenue": 216948037
+      "vote_average": {
+        "min": 0.5,
+        "max": 10.0,
+        "mean": 6.32,
+        "std": 0.94,
+        "median": 6.3
+      },
+      "revenue": {
+        "min": 1,
+        "max": 2797800564,
+        "mean": 216948037,
+        "std": 316395711,
+        "median": 84460846
+      }
     }
   },
   {
     "Animation": {
-      "vote_average": 6.58,
-      "revenue": 211283017
+      "vote_average": {
+        "min": 1.3,
+        "max": 10.0,
+        "mean": 6.58,
+        "std": 0.98,
+        "median": 6.65
+      },
+      "revenue": {
+        "min": 10,
+        "max": 1656943394,
+        "mean": 211283017,
+        "std": 275935191,
+        "median": 100333842
+      }
     }
   },
   {
     "Comedy": {
-      "vote_average": 6.17,
-      "revenue": 78530134
+      "vote_average": {
+        "min": 0.0,
+        "max": 10.0,
+        "mean": 6.17,
+        "std": 0.96,
+        "median": 6.2
+      },
+      "revenue": {
+        "min": 1,
+        "max": 1450026933,
+        "mean": 78530134,
+        "std": 137305751,
+        "median": 26713187
+      }
     }
   },
   {
     "Crime": {
-      "vote_average": 6.44,
-      "revenue": 64980288
+      "vote_average": {
+        "min": 1.0,
+        "max": 10.0,
+        "mean": 6.44,
+        "std": 0.89,
+        "median": 6.4
+      },
+      "revenue": {
+        "min": 9,
+        "max": 1238764765,
+        "mean": 64980288,
+        "std": 112390057,
+        "median": 23978402
+      }
     }
   },
   {
     "Documentary": {
-      "vote_average": 7.0,
-      "revenue": 17454494
+      "vote_average": {
+        "min": 4.0,
+        "max": 10.0,
+        "mean": 7.0,
+        "std": 1.26,
+        "median": 7.05
+      },
+      "revenue": {
+        "min": 1,
+        "max": 261200000,
+        "mean": 17454494,
+        "std": 38804415,
+        "median": 2059824
+      }
     }
   },
   {
     "Drama": {
-      "vote_average": 6.63,
-      "revenue": 52937947
+      "vote_average": {
+        "min": 2.2,
+        "max": 10.0,
+        "mean": 6.63,
+        "std": 0.97,
+        "median": 6.7
+      },
+      "revenue": {
+        "min": 1,
+        "max": 2187463944,
+        "mean": 52937947,
+        "std": 108294245,
+        "median": 14454622
+      }
     }
   },
   {
     "Family": {
-      "vote_average": 6.28,
-      "revenue": 165642889
+      "vote_average": {
+        "min": 1.3,
+        "max": 10.0,
+        "mean": 6.28,
+        "std": 1.01,
+        "median": 6.3
+      },
+      "revenue": {
+        "min": 1,
+        "max": 1656943394,
+        "mean": 165642889,
+        "std": 238477478,
+        "median": 69562983
+      }
     }
   },
   {
     "Fantasy": {
-      "vote_average": 6.33,
-      "revenue": 188477216
+      "vote_average": {
+        "min": 2.7,
+        "max": 8.5,
+        "mean": 6.33,
+        "std": 0.93,
+        "median": 6.4
+      },
+      "revenue": {
+        "min": 1,
+        "max": 2787965087,
+        "mean": 188477216,
+        "std": 289852122,
+        "median": 70974114
+      }
     }
   },
   {
     "History": {
-      "vote_average": 6.88,
-      "revenue": 64864961
+      "vote_average": {
+        "min": 3.4,
+        "max": 10.0,
+        "mean": 6.88,
+        "std": 0.77,
+        "median": 6.9
+      },
+      "revenue": {
+        "min": 5,
+        "max": 497409852,
+        "mean": 64864961,
+        "std": 92980948,
+        "median": 27008009
+      }
     }
   },
   {
     "Horror": {
-      "vote_average": 5.91,
-      "revenue": 49800077
+      "vote_average": {
+        "min": 0.0,
+        "max": 10.0,
+        "mean": 5.91,
+        "std": 0.98,
+        "median": 5.9
+      },
+      "revenue": {
+        "min": 2,
+        "max": 701796444,
+        "mean": 49800077,
+        "std": 77754874,
+        "median": 19208088
+      }
     }
   },
   {
     "Music": {
-      "vote_average": 6.64,
-      "revenue": 83054985
+      "vote_average": {
+        "min": 2.6,
+        "max": 10.0,
+        "mean": 6.64,
+        "std": 1.06,
+        "median": 6.7
+      },
+      "revenue": {
+        "min": 2,
+        "max": 1656943394,
+        "mean": 83054985,
+        "std": 190122289,
+        "median": 18750246
+      }
     }
   },
   {
     "Mystery": {
-      "vote_average": 6.29,
-      "revenue": 71137043
+      "vote_average": {
+        "min": 2.2,
+        "max": 8.3,
+        "mean": 6.29,
+        "std": 0.85,
+        "median": 6.3
+      },
+      "revenue": {
+        "min": 3,
+        "max": 938212738,
+        "mean": 71137043,
+        "std": 110113290,
+        "median": 27005214
+      }
     }
   },
   {
     "Romance": {
-      "vote_average": 6.32,
-      "revenue": 62792667
+      "vote_average": {
+        "min": 1.0,
+        "max": 10.0,
+        "mean": 6.32,
+        "std": 0.94,
+        "median": 6.4
+      },
+      "revenue": {
+        "min": 1,
+        "max": 2187463944,
+        "mean": 62792667,
+        "std": 126126426,
+        "median": 18692253
+      }
     }
   },
   {
     "Science_Fiction": {
-      "vote_average": 6.19,
-      "revenue": 165401892
+      "vote_average": {
+        "min": 1.3,
+        "max": 10.0,
+        "mean": 6.19,
+        "std": 0.94,
+        "median": 6.2
+      },
+      "revenue": {
+        "min": 1,
+        "max": 2797800564,
+        "mean": 165401892,
+        "std": 298047593,
+        "median": 46770602
+      }
     }
   },
   {
     "TV_Movie": {
-      "vote_average": 5.75,
-      "revenue": 15149892
+      "vote_average": {
+        "min": 4.0,
+        "max": 7.1,
+        "mean": 5.75,
+        "std": 0.84,
+        "median": 5.7
+      },
+      "revenue": {
+        "min": 15,
+        "max": 136000000,
+        "mean": 15149892,
+        "std": 38067936,
+        "median": 1033113
+      }
     }
   },
   {
     "Thriller": {
-      "vote_average": 6.22,
-      "revenue": 75369795
+      "vote_average": {
+        "min": 1.5,
+        "max": 10.0,
+        "mean": 6.22,
+        "std": 0.9,
+        "median": 6.3
+      },
+      "revenue": {
+        "min": 1,
+        "max": 1671713208,
+        "mean": 75369795,
+        "std": 133592557,
+        "median": 26768563
+      }
     }
   },
   {
     "War": {
-      "vote_average": 6.78,
-      "revenue": 78008788
+      "vote_average": {
+        "min": 2.9,
+        "max": 10.0,
+        "mean": 6.78,
+        "std": 0.83,
+        "median": 6.8
+      },
+      "revenue": {
+        "min": 5,
+        "max": 870322670,
+        "mean": 78008788,
+        "std": 123300767,
+        "median": 25303038
+      }
     }
   },
   {
     "Western": {
-      "vote_average": 6.48,
-      "revenue": 73145343
+      "vote_average": {
+        "min": 4.3,
+        "max": 8.1,
+        "mean": 6.48,
+        "std": 0.78,
+        "median": 6.6
+      },
+      "revenue": {
+        "min": 43,
+        "max": 532950503,
+        "mean": 73145343,
+        "std": 108104682,
+        "median": 25052000
+      }
     }
   }
 ]
