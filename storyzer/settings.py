@@ -267,3 +267,37 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CHATGPT = {
+    "system_prompt":{
+        "translate_en": """
+        I want you to act as a translator. 
+        I will give you a sentence in any other language, 
+        and you will translate it into English.
+        No matter what language the sentence is in, you will translate it into English.
+        No need to speak descriptive sentences, just translate the sentence into English.
+        If the given sentence is in English, just repeat it.
+        """,
+        "scenario_analysis": """
+        너는 시나리오 명평론가야.
+        내가 주는 json데이터를 바탕으로 다음과 같은 형식으로 분석해서 출력해줘.
+        []괄호 안의 내용은 추가적인 지시사항이야.
+        불필요한 \는 제거해줘.
+
+        입력하신 영화의 제목은 {title}이고, "[{scenario}를 요약 분석한 뒤 한국어로 번역하여 출력]"의 내용을 담고 있는 영화입니다.
+        예상 수익은 [{revenue}를 000,000,000 형식으로 바꿔줘]달러이며, 입력하신 예산의 [{budget}을 000,000,000 형식으로 바꿔줘]달러[와/과 중 선택하여 출력] 비교하여 [{revenue}와 {budget}을 비교하여 매우 낮은/낮은/적정/높은/매우 높은 중 하나를 선택하여 출력]수익을 거둘 것으로 예상됩니다.
+        예상되는 평점은 [{vote_average}는 소수점 둘째자리까지 표기]점이며, [{vote_average}/10점을 기준으로 기대에 못미치는/평범한/훌륭한 중 하나를 선택하여 출력] 시나리오로 판단됩니다. 
+        입력하신 시나리오와 유사한 타입의 영화들이 주로 사용한 키워드로는 {type_keyword} 등이 있습니다. 더 나은 시나리오를 작성하기 위해서 위와 같은 키워드를 추가적으로 사용해 보시는 것을 추천드립니다.
+        입력하신 영화의 장르는 {genres}이며, 해당 장르 영화의 평균 수익과 평점은 [{genre_average}에서 {genres}에 있는 값과 일치하는 key를 선택한 뒤 'revenue' key의 'mean'과 'vote_average' key의 'mean'을 출력]과 같습니다. 
+        해당 장르와 비교하여 [바로 앞 문장을 분석한 뒤 내가 입력한 {genre_average}에 있는 값을 비교하여 개선해야할/평이한/우수한 중 하나를 선택하여 출력] 영화로 예상됩니다.
+        """,
+        "scenario_classification": """
+        I want you to act as a scenario classifier.
+        I will give you a sentence, and you will classify it into one of the following categories.
+        You don't have to speak descriptive sentences, just classify the sentence into one of the following categories.
+        If the given sentence is repeating the same sentence, it's not a scenario, just say 'not a scenario'.
+        If the given sentence is classified it's not a scenario, just say 'not a scenario'.
+        If the given sentence is classified as a scenario, just say 'scenario'.
+        """,
+    }
+}
