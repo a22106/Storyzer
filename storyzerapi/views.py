@@ -397,17 +397,36 @@ class MoviePredictionView(APIView):
         instances = {'scenario': scenario, 'potential': potential_instance}
         predictions = pred_scenario(PROJECT, LOCATION, instances)
         
-        system_prompt = """I'd like you to serve as a movie performance predictor. 
-        You will receive comprehensive input data in JSON format, 
-        including the movie's title, plot synopsis, budget, original language, runtime, genres, key cast, and director. 
-        If any important information is missing, please state your assumptions clearly. 
-        Your output should be in JSON format and contain your predictions for the movie's revenue and vote average. 
-        Provide a detailed analysis and explanation for your predictions, based on the given input data, 
-        and justify any assumptions you've made. Assume that you have never seen the movie in question before.
+        # system_prompt = """I'd like you to serve as a movie performance predictor. 
+        # You will receive comprehensive input data in JSON format, 
+        # including the movie's title, plot synopsis, budget, original language, runtime, genres, key cast, and director. 
+        # If any important information is missing, please state your assumptions clearly. 
+        # Your output should be in JSON format and contain your predictions for the movie's revenue and vote average. 
+        # Provide a detailed analysis and explanation for your predictions, based on the given input data, 
+        # and justify any assumptions you've made. Assume that you have never seen the movie in question before.
+        # """
+
+        with open('genre_average.json', 'r') as f:
+            genre_average = json.load(f)
+
+        system_prompt = """
+        너는 시나리오 명평론가야.
+        내가 주는 json데이터를 바탕으로 다음과 같은 형식으로 분석해서 출력해줘.
+        []괄호 안의 내용은 추가적인 지시사항이야.
+        불필요한 \는 제거해줘.
+
+        입력하신 영화의 제목은 {title}이고, "[{scenario}를 요약 분석한 뒤 한국어로 번역하여 출력]"의 내용을 담고 있는 영화입니다.
+        예상 수익은 [{revenue}를 000,000,000 형식으로 바꿔줘]달러이며, 입력하신 예산의 [{budget}을 000,000,000 형식으로 바꿔줘]달러[와/과 중 선택하여 출력] 비교하여 [{revenue}와 {budget}을 비교하여 매우 낮은/낮은/적정/높은/매우 높은 중 하나를 선택하여 출력]수익을 거둘 것으로 예상됩니다.
+        예상되는 평점은 [{vote_average}는 소수점 둘째자리까지 표기]점이며, [{vote_average}/10점을 기준으로 기대에 못미치는/평범한/훌륭한 중 하나를 선택하여 출력] 시나리오로 판단됩니다. 
+        입력하신 시나리오와 유사한 타입의 영화들이 주로 사용한 키워드로는 {type_keyword} 등이 있습니다. 더 나은 시나리오를 작성하기 위해서 위와 같은 키워드를 추가적으로 사용해 보시는 것을 추천드립니다.
+        입력하신 영화의 장르는 {genres}이며, 해당 장르 영화의 평균 수익과 평점은 [{genre_average}에서 {genres}에 있는 값과 일치하는 key를 선택한 뒤 'revenue' key의 'mean'과 'vote_average' key의 'mean'을 출력]과 같습니다. 
+        해당 장르와 비교하여 [바로 앞 문장을 분석한 뒤 내가 입력한 {genre_average}에 있는 값을 비교하여 개선해야할/평이한/우수한 중 하나를 선택하여 출력] 영화로 예상됩니다.
         """
-        user_prompt = "input" + json.dumps(request.data) + "\n" + "output" + json.dumps(predictions)
+        # user_prompt = "input" + json.dumps(request.data) + "\n" + "output" + json.dumps(predictions)
+        user_prompt = f"{json.dumps(request.data)}, {json.dumps(predictions)}, {json.dumps(genre_average)}"
         reply = ChatGPT(user_prompt, system_prompt).chatgpt_request()
-        
+        reply = reply.replace('\\', '')
+
         predictions['analyze'] = reply
         
         if user_id is not None:
@@ -456,7 +475,8 @@ class ChatGPTView(APIView):
         return Response({"message": reply}, status=status.HTTP_200_OK)
     
 class ChatGPT():
-    def __init__(self, user_prompt, system_prompt, model="gpt-3.5-turbo"):
+    # def __init__(self, user_prompt, system_prompt, model="gpt-3.5-turbo"):
+    def __init__(self, user_prompt, system_prompt, model="gpt-4"):
         self.user_prompt = user_prompt
         self.system_prompt = system_prompt
         self.model = model
