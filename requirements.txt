@@ -1,5 +1,6 @@
 Django                        
 django-allauth                
+django-cors-headers
 djangorestframework          
 djangorestframework-simplejwt
 cryptography

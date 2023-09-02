@@ -1,9 +1,13 @@
+import datetime
 import json
+import logging
+import traceback
 from django.http import QueryDict
 from django.shortcuts import render
 
 # Create your views here.
 from rest_framework import status, viewsets
+from rest_framework.request import Request
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.conf import settings
@@ -17,7 +21,7 @@ from manage import api_host
 import openai
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
-from .models import User
+from .models import Results, User
 # Predict View
 from typing import Dict
 from google.cloud import aiplatform
@@ -30,6 +34,9 @@ import os
 from sentence_transformers import SentenceTransformer
 
 from .serializers import UserSerializer
+
+logging.basicConfig(level=logging.INFO, format='[%(asctime)s %(levelname)s] %(message)s',
+                    datefmt='%d/%b/%Y %H:%M:%S')
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
@@ -99,25 +106,37 @@ class UserDetailView(APIView):
             404: 'User does not exist',
         },
     )
-    def get(self, request):
-        id = request.data.get('id')
+    def get(self, request: Request):
+        user_id = _get_user_id_from_auth(request)
+        logging.info(f"request: {request.__dict__}")
+        logging.info(f"id: {user_id}")
+        logging.info(f"request.user: {request.user}")
+        logging.info(f"request.data: {request.data}")
+        
         try:
-            user = User.objects.get(id=id)
-            is_staff = user.is_staff
-            is_active = user.is_active
-            is_verified = user.is_verified
-            is_superuser = user.is_superuser
-            created = user.created
-            last_login = user.last_login
-            return Response({"username": user.username, "email": user.email, \
+            user_db = User.objects.get(id=user_id)
+            is_staff = user_db.is_staff
+            is_active = user_db.is_active
+            is_verified = user_db.is_verified
+            is_superuser = user_db.is_superuser
+            created = user_db.created
+            user_db.last_login = datetime.datetime.now()
+            last_login = user_db.last_login
+
+            # Update last login
+            user_db.save()
+            
+            return Response({"username": user_db.username, "email": user_db.email, \
                              "is_staff": is_staff, "is_active": is_active, \
                              "is_verified": is_verified, "is_superuser": is_superuser, \
                              "created": created, "last_login": last_login}, status=status.HTTP_200_OK)
         except User.DoesNotExist:
             return Response({"error": "User does not exist"}, status=status.HTTP_404_NOT_FOUND)
 
-def _get_user_id_from_auth(self, request: APIView):
-    return request.__dict__.get("_auth", {}).get("user_id", None)
+def _get_user_id_from_auth(request: Request):
+    # If the request is authenticated, request.user should be a user instance.
+    user = request.user
+    return getattr(user, 'id', None)
 
 class EmailVerifyView(APIView):
 
@@ -174,7 +193,7 @@ class EmailVerifyTokenView(APIView):
             return Response({"error": "User does not exist or token is invalid"}, status=status.HTTP_400_BAD_REQUEST)
 
 class PasswordResetView(APIView):
-    def post(self, request):
+    def post(self, request: Request):
         user_id = _get_user_id_from_auth(request)
         try:
             user = User.objects.get(id=user_id)
@@ -259,6 +278,27 @@ class MoviePredictionView(APIView):
         },
     )
     def post(self, request):
+
+        # check if the user is logged in
+        try:
+            user_email = request._user.email
+            user_id = User.objects.get(email=user_email).id
+            user_db = User.objects.get(id=user_id)
+        except AttributeError:
+            user_id = None
+            user_db = None
+        except User.DoesNotExist:
+            user_id = None
+            user_db = None
+            logging.error(f"User does not exist. \n{traceback.format_exc()}")
+        # print(request.__dict__)
+        # print(request.data)
+        # user_id = request.data.get('user_id')
+        
+        if user_db is None:
+            logging.error(f"User does not exist. user_id: {user_id}")
+        #     return Response({"error": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        
         # check if the scenario are in English. 
         # Otherwise, translate them into English using chatgpt
         title = str(request.data.get('title'))
@@ -356,9 +396,88 @@ class MoviePredictionView(APIView):
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = CREDENTIALS
         instances = {'scenario': scenario, 'potential': potential_instance}
         predictions = pred_scenario(PROJECT, LOCATION, instances)
-
+        
+        system_prompt = """I'd like you to serve as a movie performance predictor. 
+        You will receive comprehensive input data in JSON format, 
+        including the movie's title, plot synopsis, budget, original language, runtime, genres, key cast, and director. 
+        If any important information is missing, please state your assumptions clearly. 
+        Your output should be in JSON format and contain your predictions for the movie's revenue and vote average. 
+        Provide a detailed analysis and explanation for your predictions, based on the given input data, 
+        and justify any assumptions you've made. Assume that you have never seen the movie in question before.
+        """
+        user_prompt = "input" + json.dumps(request.data) + "\n" + "output" + json.dumps(predictions)
+        reply = ChatGPT(user_prompt, system_prompt).chatgpt_request()
+        
+        predictions['analyze'] = reply
+        
+        if user_id is not None:
+            results = Results.objects.create(user_id=user_id, result=predictions, content="movie")
+            results.save()
+            logging.info(f"User prediction saved. user_id: {user_id}")
+        else: # TODO: 유저 로그인 기능 완료 시 삭제
+            results = Results.objects.create(user_id=5, result=predictions, content="movie")
+            results.save()
+            logging.info(f"User prediction saved to default user. user_id: {user_id}")
+        
         return Response(predictions, status=status.HTTP_200_OK)
+        
     
+class ChatGPTView(APIView):
+    @swagger_auto_schema(
+        operation_description="Chat with GPT-3.5-turbo",
+        request_body=openapi.Schema(
+            type=openapi.TYPE_OBJECT, # Request body will be in JSON format
+            properties={
+                'system_prompt': openapi.Schema(type=openapi.TYPE_STRING, description='System prompt'),
+                'user_prompt': openapi.Schema(type=openapi.TYPE_STRING, description='User prompt'),
+            },
+        ),
+        responses={
+            200: 'Text analyzed successfully',
+            400: 'Invalid request',
+        },
+    )
+    def post(self, request: Request):
+        user_id = _get_user_id_from_auth(request)
+        user_db = User.objects.get(id=user_id)
+        if user_db is None: # TODO: 유저 로그인 검증 부분 별도의 데코레이터로 분리
+            logging.error(f"User does not exist. user_id: {user_id}")
+            return Response({"error": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
+        elif not user_db.is_verified:
+            logging.error(f"User is not verified. user_id: {user_id}")
+            return Response({"error": "User is not verified"}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        # post data in json format
+        user_prompt = request.data.get('user_prompt')
+        system_prompt = request.data.get('system_prompt')
+        
+        reply = ChatGPT(user_prompt, system_prompt).chatgpt_request()
+        
+        return Response({"message": reply}, status=status.HTTP_200_OK)
+    
+class ChatGPT():
+    def __init__(self, user_prompt, system_prompt, model="gpt-3.5-turbo"):
+        self.user_prompt = user_prompt
+        self.system_prompt = system_prompt
+        self.model = model
+        self.messages = []
+        self.messages.append({"role": "system", "content": self.system_prompt})
+        
+    def chatgpt_request(self):
+        openai.api_key = settings.OPENAI_API_KEY
+        
+        # Generate chat response
+        self.messages.append({"role": "user", "content": self.user_prompt})
+        
+        response = openai.ChatCompletion.create(
+            model=self.model,
+            messages=self.messages,
+        )
+        
+        reply = response.choices[0].message.content
+        self.messages.append({"role": "assistant", "content": reply})
+        
+        return reply
 
 class ChatGPTAnalyzesView(APIView):
     @swagger_auto_schema(
@@ -381,23 +500,9 @@ class ChatGPTAnalyzesView(APIView):
         And I will give you the prediction result of the movie, revenue, and vote average in json format.
         Explain the prediction result of the movie, revenue, and vote average."""
         user_prompt = "input" + request.data.get('input') + "\n" + "output" + request.data.get('output')
-
-        openai.api_key = settings.OPENAI_API_KEY
-
-        # Generate chat response
-        messages = []
-        messages.append({"role": "system", "content": system_prompt})
-        messages.append({"role": "user", "content": user_prompt})
-
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=messages,
-        )
-
-        reply = response.choices[0].message.content
+        reply = ChatGPT(user_prompt, system_prompt).chatgpt_request()
 
         return Response({"message": reply}, status=status.HTTP_200_OK)
-    
 
 class ChatGPTTranslateView(APIView):
     @swagger_auto_schema(
@@ -424,19 +529,7 @@ class ChatGPTTranslateView(APIView):
         """
         user_prompt = request.data.get('context')
         
-        openai.api_key = settings.OPENAI_API_KEY
-        
-        # Generate chat response
-        messages = []
-        messages.append({"role": "system", "content": system_prompt})
-        messages.append({"role": "user", "content": user_prompt})
-        
-        response = openai.ChatCompletion.create(
-            model="gpt-3.5-turbo",
-            messages=messages,
-        )
-        
-        reply = response.choices[0].message.content
+        reply = ChatGPT(user_prompt, system_prompt).chatgpt_request()
         
         return Response({"message": reply}, status=status.HTTP_200_OK)
 
@@ -444,6 +537,48 @@ class ResultSaveView(APIView):
     def create(self, request):
         pass
         
-
 class ResultListView(APIView):
-    pass
+    @swagger_auto_schema( 
+        operation_description="Get results",
+        responses={
+            200: 'Results retrieved successfully',
+            400: 'Invalid request',
+        },
+    )
+    def get(self, request: Request):
+        try:
+            # logging.info(f"Request: {request.__dict__}")
+            # logging.info(f"Request data: {request.data}")
+            # logging.info(f"Request query params: {request.query_params}")
+            # logging.info(f"User: {request._user}")
+            # user_id = request.query_params.get('user_id')
+            try:
+                user_email = request._user.email
+            except AttributeError:
+                return Response({"error": "Unauthorized. Token expired or invalid."}, status=status.HTTP_401_UNAUTHORIZED)
+            
+            user_id = _get_user_id_from_auth(request)
+            content = request.query_params.get('content')
+            user_db = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            user_db = None
+        
+        if user_db is None:
+            results = Results.objects.all()
+        else:
+            results = Results.objects.filter(user_id=user_id)
+        
+        # TODO: 유저 로그인 기능 완료 시 404 에러 추가
+        
+        if content is not None:
+            results = results.filter(content=content)
+        
+        try:
+            results_list = [x.result for x in results]
+        except Exception as e:
+            logging.error(f"Error occurred while getting results. error: {str(e)}")
+            logging.info(f"{traceback.format_exc()}")
+            
+            return Response({"error": f"Error occurred while getting results. error: {str(e)}"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+        
+        return Response(results_list, status=status.HTTP_200_OK)
