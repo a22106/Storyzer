@@ -376,35 +376,39 @@ class MoviePredictionView(APIView):
         instances = {'scenario': scenario, 'potential': potential_instance}
         predictions = pred_scenario(PROJECT, LOCATION, instances)
         
-        system_prompt = """I want you to act as a movie predictor.
-        I will give you a movie title, scenario, budget, original language, runtime, and genres in json format.
-        And I will give you the prediction result of the movie, revenue, and vote average in json format.
-        Explain the prediction result of the movie, revenue, and vote average."""
+        system_prompt = """I'd like you to serve as a movie performance predictor. 
+        You will receive comprehensive input data in JSON format, 
+        including the movie's title, plot synopsis, budget, original language, runtime, genres, key cast, and director. 
+        If any important information is missing, please state your assumptions clearly. 
+        Your output should be in JSON format and contain your predictions for the movie's revenue and vote average. 
+        Provide a detailed analysis and explanation for your predictions, based on the given input data, 
+        and justify any assumptions you've made. Assume that you have never seen the movie in question before.
+        """
         user_prompt = "input" + json.dumps(request.data) + "\n" + "output" + json.dumps(predictions)
         reply = ChatGPT(user_prompt, system_prompt).chatgpt_request()
         
         predictions['analyze'] = reply
         
         if user_id is not None:
-            results = Results.objects.create(user_id=user_id, result=predictions)
+            results = Results.objects.create(user_id=user_id, result=predictions, content="movie")
             results.save()
             logging.info(f"User prediction saved. user_id: {user_id}")
         else: # TODO: 유저 로그인 기능 완료 시 삭제
-            results = Results.objects.create(user_id=5, result=predictions)
+            results = Results.objects.create(user_id=5, result=predictions, content="movie")
             results.save()
             logging.info(f"User prediction saved to default user. user_id: {user_id}")
         
         return Response(predictions, status=status.HTTP_200_OK)
     
 class ResultListView(APIView):
-    @swagger_auto_schema(
+    @swagger_auto_schema( 
         operation_description="Get results",
         responses={
             200: 'Results retrieved successfully',
             400: 'Invalid request',
         },
     )
-    def get(self, request, user_id):
+    def get(self, request, user_id: int = None, content: str = None):
         user_db = User.objects.get(id=user_id)
         if user_db is None:
             results = Results.objects.all()
@@ -412,6 +416,9 @@ class ResultListView(APIView):
             results = Results.objects.filter(user_id=user_id)
         
         # TODO: 유저 로그인 기능 완료 시 404 에러 추가
+        
+        if content is not None:
+            results = results.filter(content=content)
         
         try:
             results_list = [x.result for x in results]
