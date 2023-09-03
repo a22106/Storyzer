@@ -13,3 +13,11 @@ python manage.py runserver (0.0.0.0:7000)
 python manage.py makemigrations
 python manage.py migrate
 ```
+
+## trouble shooting
+- 다음 명령어를 실행하여 필요한 패키지를 설치합니다.
+```bash
+sudo apt-get install -y pkg-config default-libmysqlclient-dev gcc python3.11-dev build-essential
+pip install --upgrade pip setuptools wheel
+pip install -r requirements.txt
+```

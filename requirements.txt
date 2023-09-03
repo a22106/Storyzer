@@ -1,8 +1,9 @@
-Django                        
+django                        
 django-allauth                
 django-cors-headers
 djangorestframework          
 djangorestframework-simplejwt
+rest_framework_simplejwt
 cryptography
 drf-yasg
 PyJWT
@@ -24,3 +25,6 @@ google-cloud-aiplatform
 numpy
 sentence-transformers
 pandas
+importlib-metadata
+jsonschema
+pyparsing==3.0.0
