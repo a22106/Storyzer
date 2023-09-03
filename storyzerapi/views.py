@@ -305,12 +305,12 @@ class MoviePredictionView(APIView):
         
         # check if the scenario are in English. 
         # Otherwise, translate them into English using chatgpt
-        title = str(input.get('title'))
-        scenario = str(input.get('scenario'))
-        budget = str(input.get('budget'))
-        original_language = str(input.get('language'))
-        runtime = str(input.get('runtime'))
-        genres = input.get('genres')
+        title = str(request.data.get('title'))
+        scenario = str(request.data.get('scenario'))
+        budget = str(request.data.get('budget'))
+        original_language = str(request.data.get('language'))
+        runtime = str(request.data.get('runtime'))
+        genres = request.data.get('genres')
         
         # Translate scenario into English
         scenario = scenario.replace('\n', ' ') # remove line breaks
@@ -587,7 +587,9 @@ class ResultListView(APIView):
         user_id = request.query_params.get('user_id') if request.query_params.get('user_id') is not None else user_id
         user_id = 0 if user_id is None else user_id
         category = request.query_params.get('category')
-        page = request.query_params.get('page', 1) 
+        page = request.query_params.get('page', 1)
+        page = 1 if page is None or not page.isdigit() or int(page) < 1 else int(page)
+        
         if user_id is not None:
             user_db = User.objects.filter(id=user_id).first()
             if user_db is not None:
@@ -608,7 +610,7 @@ class ResultListView(APIView):
                                      "output": result.output, 
                                      "analyze": result.analyze, 
                                      "category": result.category})
-            results_list = results_list[(page-1)*10:page*10] if len(results_list) > 10 else results_list
+            results_list = results_list[(page-1)*10:page*10] if len(results_list) >= page*10 else results_list[(page-1)*10:]
             
             response_data = {
                 "page": page,
