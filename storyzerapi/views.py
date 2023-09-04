@@ -413,15 +413,6 @@ class MoviePredictionView(APIView):
         os.environ['GOOGLE_APPLICATION_CREDENTIALS'] = CREDENTIALS
         instances = {'scenario': scenario, 'potential': potential_instance}
         predictions = pred_scenario(PROJECT, LOCATION, instances)
-        
-        # system_prompt = """I'd like you to serve as a movie performance predictor. 
-        # You will receive comprehensive input data in JSON format, 
-        # including the movie's title, plot synopsis, budget, original language, runtime, genres, key cast, and director. 
-        # If any important information is missing, please state your assumptions clearly. 
-        # Your output should be in JSON format and contain your predictions for the movie's revenue and vote average. 
-        # Provide a detailed analysis and explanation for your predictions, based on the given input data, 
-        # and justify any assumptions you've made. Assume that you have never seen the movie in question before.
-        # """
 
         with open('genre_average.json', 'r') as f:
             genre_average = json.load(f)
@@ -454,11 +445,12 @@ class MoviePredictionView(APIView):
         
 class AverageGenresView(APIView):
     def get(self, request):
-        with open('genre_average.json', 'r') as f:
+        with open('storyzerapi/formats/genre_average.json', 'r') as f:
             genre_average = json.load(f)
         return Response(genre_average, status=status.HTTP_200_OK)
     
 class ChatGPTView(APIView):
+    @method_decorator(verify_user)
     @swagger_auto_schema(
         operation_description="Chat with GPT-3.5-turbo",
         request_body=openapi.Schema(
@@ -474,12 +466,6 @@ class ChatGPTView(APIView):
         },
     )
     def post(self, request: Request):
-        # if user_db is None: # TODO: 유저 로그인 검증 부분 별도의 데코레이터로 분리
-        #     logging.error(f"User does not exist. user_id: {user_id}")
-        #     return Response({"error": "User does not exist"}, status=status.HTTP_400_BAD_REQUEST)
-        # elif not user_db.is_verified:
-        #     logging.error(f"User is not verified. user_id: {user_id}")
-        #     return Response({"error": "User is not verified"}, status=status.HTTP_401_UNAUTHORIZED)
         
         # post data in json format
         system_prompt = request.data.get('system_prompt')
@@ -581,7 +567,6 @@ class ResultListView(APIView):
         },
     )
     def get(self, request: Request, *args, **kwargs):
-        # print(request.__dict__)
         results = Results.objects.all()
         user_id = _get_user_id_from_auth(request)
         user_id = request.query_params.get('user_id') if request.query_params.get('user_id') is not None else user_id

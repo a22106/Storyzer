@@ -65,7 +65,7 @@ REST_FRAMEWORK = {
     ],
 }
 
-with open('keywords.json', 'r', encoding='utf-8') as f:
+with open('storyzerapi/formats/keywords.json', 'r', encoding='utf-8') as f:
     SCENARIO_KEYWORDS = json.loads(f.read())
 
 SIMPLE_JWT = {
